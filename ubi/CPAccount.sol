@@ -70,7 +70,7 @@ contract CPAccount {
         }
 
 
-    function submitUBIProof(string memory _taskId, uint8 _taskType, string _zkType, string memory _proof) public onlyOwner {
+    function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _zkType, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
         taskId: _taskId,
