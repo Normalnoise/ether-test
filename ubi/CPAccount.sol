@@ -3,10 +3,9 @@ pragma solidity ^0.8.0;
 
 contract CPAccount {
     address public owner;
-    uint8 public windowPoStProofType;
     string public nodeId;
     string[] public multiAddresses;
-    string public ubiFlag;
+    uint8 public ubiFlag;
 
     struct Beneficiary {
         address beneficiaryAddress;
@@ -28,16 +27,21 @@ contract CPAccount {
 
     constructor(
         address _owner,
-        uint8 _windowPoStProofType,
         string memory _nodeId,
         string[] memory _multiAddresses,
-        string memory _ubiFlag
+        uint8 _ubiFlag,
+        address _beneficiaryAddress
     ) {
         owner = _owner;
-        windowPoStProofType = _windowPoStProofType;
         nodeId = _nodeId;
         multiAddresses = _multiAddresses;
         ubiFlag = _ubiFlag;
+        beneficiary = Beneficiary({
+                beneficiaryAddress: _beneficiaryAddress,
+                quota: 0,
+                expiration: 0
+                });
+
     }
 
     modifier onlyOwner() {
@@ -65,7 +69,7 @@ contract CPAccount {
         });
     }
 
-        function changeUbiFlag(string memory newUbiFlag) public onlyOwner {
+        function changeUbiFlag(uint8 newUbiFlag) public onlyOwner {
             ubiFlag = newUbiFlag;
         }
 
