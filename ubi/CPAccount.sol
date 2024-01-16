@@ -52,7 +52,9 @@ contract CPAccount {
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
     }
-
+    function getOwner() public view returns (address) {
+        return owner;
+    }
     function changeOwnerAddress(address newOwner) public onlyOwner {
         owner = newOwner;
     }
