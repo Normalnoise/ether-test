@@ -25,6 +25,11 @@ contract CPAccount {
 
     mapping(string => Task) public tasks;
 
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event BeneficiaryChanged(address beneficiary, uint quota, uint expiration);
+    event UBIFlagChanged(uint8 ubiFlag);
+    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string zkType, string proof);
+
     constructor(
         address _owner,
         string memory _nodeId,
@@ -48,15 +53,16 @@ contract CPAccount {
         require(msg.sender == owner, "Only owner can call this function.");
         _;
     }
+    function getOwner() public view returns (address) {
+        return owner;
+    }
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
     }
-    function getOwner() public view returns (address) {
-        return owner;
-    }
     function changeOwnerAddress(address newOwner) public onlyOwner {
         owner = newOwner;
+        emit OwnershipTransferred(msg.sender, newOwner);
     }
 
     function changeBeneficiary(
@@ -69,12 +75,14 @@ contract CPAccount {
         quota: newQuota,
         expiration: newExpiration
         });
+
+        emit BeneficiaryChanged(newBeneficiary, newQuota, newExpiration);
     }
 
-        function changeUbiFlag(uint8 newUbiFlag) public onlyOwner {
-            ubiFlag = newUbiFlag;
-        }
-
+    function changeUbiFlag(uint8 newUbiFlag) public onlyOwner {
+        ubiFlag = newUbiFlag;
+        emit UBIFlagChanged(newUbiFlag);
+    }
 
     function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _zkType, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
@@ -85,5 +93,7 @@ contract CPAccount {
         proof: _proof,
         isSubmitted: true
         });
+
+        emit UBIProofSubmitted(msg.sender, _taskId, _taskType, _zkType, _proof);
     }
 }
