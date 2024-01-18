@@ -57,7 +57,9 @@ contract CPAccount {
     function getOwner() public view returns (address) {
         return owner;
     }
-
+    function getAccount() public view returns (address, string memory, string[] memory, uint8, address, uint256, uint256) {
+        return (owner, nodeId, multiAddresses, ubiFlag, beneficiary.beneficiaryAddress, beneficiary.quota, beneficiary.expiration);
+    }
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
 
