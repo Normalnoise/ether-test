@@ -36,4 +36,6 @@ def scan_tx(tx_hash):
         print("Decoded Event:", event)
 
 
-scan_tx("0x599b0895387c6cb48ead0658a468ac50d5719c0f15c012cfda28ee5f555909a8")
+scan_tx(
+    "0x599b0895387c6cb48ead0658a468ac50d5719c0f15c012cfda28ee5f555909a8"
+)  # submitProof tx hash

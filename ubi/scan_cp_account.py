@@ -41,9 +41,9 @@ def get_events_between_blocks(cp_account_address, event_name, from_block, to_blo
 
 print(
     get_events_between_blocks(
-        "0x357715b93c8Ce5124c2551F368BFFB34A0B6D273",
-        "UBIProofSubmitted",
-        0,
-        web3.eth.get_block("latest").number,
+        "0x357715b93c8Ce5124c2551F368BFFB34A0B6D273",  # CPAccount contract address
+        "UBIProofSubmitted",  # event name
+        0,  # starting block
+        web3.eth.get_block("latest").number,  # ending block
     )
 )

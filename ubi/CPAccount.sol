@@ -26,6 +26,7 @@ contract CPAccount {
     mapping(string => Task) public tasks;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event MultiaddrsChanged(string[] newMultiaddrs);
     event BeneficiaryChanged(address beneficiary, uint quota, uint expiration);
     event UBIFlagChanged(uint8 ubiFlag);
     event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string zkType, string proof);
@@ -59,6 +60,8 @@ contract CPAccount {
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
+
+        emit MultiaddrsChanged(newMultiaddrs);
     }
     function changeOwnerAddress(address newOwner) public onlyOwner {
         owner = newOwner;
