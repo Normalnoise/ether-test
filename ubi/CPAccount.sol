@@ -32,13 +32,12 @@ contract CPAccount {
     event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string zkType, string proof);
 
     constructor(
-        address _owner,
         string memory _nodeId,
         string[] memory _multiAddresses,
         uint8 _ubiFlag,
         address _beneficiaryAddress
     ) {
-        owner = _owner;
+        owner = msg.sender;
         nodeId = _nodeId;
         multiAddresses = _multiAddresses;
         ubiFlag = _ubiFlag;
