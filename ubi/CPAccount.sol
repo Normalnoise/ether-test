@@ -79,14 +79,14 @@ contract CPAccount {
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
-    owner = newOwner;
+        owner = newOwner;
 
-    // Emit event to notify ContractRegistry about owner change
-    emit OwnershipTransferred(msg.sender, newOwner);
+        // Emit event to notify ContractRegistry about owner change
+        emit OwnershipTransferred(msg.sender, newOwner);
 
-    // Call changeOwner function of ContractRegistry to update owner
-    (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
-    require(success, "Failed to change owner in ContractRegistry");
+        // Call changeOwner function of ContractRegistry to update owner
+        (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
+        require(success, "Failed to change owner in ContractRegistry");
     }
 
     function changeBeneficiary(address newBeneficiary) public onlyOwner {
