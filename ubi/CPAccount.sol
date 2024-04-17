@@ -87,13 +87,13 @@ contract CPAccount {
     }
 
     function changeBeneficiary(address newBeneficiary) public onlyOwner {
-        emit BeneficiaryChanged(beneficiary, newBeneficiary);
         beneficiary = newBeneficiary;
+        emit BeneficiaryChanged(beneficiary, newBeneficiary);
     }
 
     function changeWorker(address newWorker) public onlyOwner {
-        emit WorkerChanged(worker, newWorker);
         worker = newWorker;
+        emit WorkerChanged(worker, newWorker);
     }
 
     function submitUBIProof(string memory _taskId, uint8[] memory _taskTypes, string memory _proof) public onlyOwner {
