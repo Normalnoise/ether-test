@@ -1,24 +1,15 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract CPAccount {
     address public owner;
+    address public worker;
     string public nodeId;
     string[] public multiAddresses;
-    uint8 public ubiFlag;
-
-    struct Beneficiary {
-        address beneficiaryAddress;
-        uint256 quota;
-        uint256 expiration;
-    }
-
-    Beneficiary public beneficiary;
+    address public beneficiary;
 
     struct Task {
         string taskId;
-        uint8 taskType;
-        string zkType;
+        uint8[] taskTypes;
         string proof;
         bool isSubmitted;
     }
@@ -26,78 +17,94 @@ contract CPAccount {
     mapping(string => Task) public tasks;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event WorkerChanged(address indexed previousWorker, address indexed newWorker);
     event MultiaddrsChanged(string[] newMultiaddrs);
-    event BeneficiaryChanged(address beneficiary, uint quota, uint expiration);
-    event UBIFlagChanged(uint8 ubiFlag);
-    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string zkType, string proof);
+    event BeneficiaryChanged(address previousBeneficiary, address newBeneficiary);
+    event UBIProofSubmitted(address indexed submitter, string taskId, uint8[] taskTypes, string proof);
+
+    // Event to notify ContractRegistry when CPAccount is deployed
+    event CPAccountDeployed(address indexed cpAccount, address indexed owner);
 
     constructor(
         string memory _nodeId,
         string[] memory _multiAddresses,
-        uint8 _ubiFlag,
-        address _beneficiaryAddress
+        address _beneficiary,
+        address _worker,
+        address _contractRegistryAddress
     ) {
         owner = msg.sender;
         nodeId = _nodeId;
         multiAddresses = _multiAddresses;
-        ubiFlag = _ubiFlag;
-        beneficiary = Beneficiary({
-                beneficiaryAddress: _beneficiaryAddress,
-                quota: 0,
-                expiration: 0
-                });
+        beneficiary = _beneficiary;
+        worker = _worker;
 
+        // Register CPAccount to ContractRegistry
+        registerToContractRegistry(_contractRegistryAddress);
+
+        // Emit event to notify CPAccount deployment
+        emit CPAccountDeployed(address(this), owner);
     }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function.");
         _;
     }
+
+    function registerToContractRegistry(address contractRegistryAddress) private {
+        // Call registerCPContract function of ContractRegistry
+        // Assumes ContractRegistry has a function registerCPContract(address cpContract, address owner) 
+        (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("registerCPContract(address,address)", address(this), owner));
+        require(success, "Failed to register CPContract to ContractRegistry");
+    }
+
     function getOwner() public view returns (address) {
         return owner;
     }
-    function getAccount() public view returns (address, string memory, string[] memory, uint8, address, uint256, uint256) {
-        return (owner, nodeId, multiAddresses, ubiFlag, beneficiary.beneficiaryAddress, beneficiary.quota, beneficiary.expiration);
+
+    function getWorker() public view returns (address) {
+        return worker;
     }
+
+    function getBeneficiary() public view returns (address) {
+        return beneficiary;
+    }
+
+    function getMultiAddresses() public view returns (string[] memory) {
+        return multiAddresses;
+    }
+
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
 
         emit MultiaddrsChanged(newMultiaddrs);
     }
+
     function changeOwnerAddress(address newOwner) public onlyOwner {
         owner = newOwner;
+
+        // Emit event to notify ContractRegistry about owner change
         emit OwnershipTransferred(msg.sender, newOwner);
     }
 
-    function changeBeneficiary(
-        address newBeneficiary,
-        uint256 newQuota,
-        uint256 newExpiration
-    ) public onlyOwner {
-        beneficiary = Beneficiary({
-        beneficiaryAddress: newBeneficiary,
-        quota: newQuota,
-        expiration: newExpiration
-        });
-
-        emit BeneficiaryChanged(newBeneficiary, newQuota, newExpiration);
+    function changeBeneficiary(address newBeneficiary) public onlyOwner {
+        emit BeneficiaryChanged(beneficiary, newBeneficiary);
+        beneficiary = newBeneficiary;
     }
 
-    function changeUbiFlag(uint8 newUbiFlag) public onlyOwner {
-        ubiFlag = newUbiFlag;
-        emit UBIFlagChanged(newUbiFlag);
+    function changeWorker(address newWorker) public onlyOwner {
+        emit WorkerChanged(worker, newWorker);
+        worker = newWorker;
     }
 
-    function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _zkType, string memory _proof) public onlyOwner {
+    function submitUBIProof(string memory _taskId, uint8[] memory _taskTypes, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
-        taskId: _taskId,
-        taskType: _taskType,
-        zkType: _zkType,
-        proof: _proof,
-        isSubmitted: true
+            taskId: _taskId,
+            taskTypes: _taskTypes,
+            proof: _proof,
+            isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskId, _taskType, _zkType, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskId, _taskTypes, _proof);
     }
 }
