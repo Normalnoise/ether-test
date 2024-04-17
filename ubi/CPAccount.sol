@@ -9,7 +9,7 @@ contract CPAccount {
 
     struct Task {
         string taskId;
-        uint8[] taskTypes;
+        uint8 taskType;
         string proof;
         bool isSubmitted;
     }
@@ -99,15 +99,15 @@ contract CPAccount {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function submitUBIProof(string memory _taskId, uint8[] memory _taskTypes, string memory _proof) public onlyOwner {
+    function submitUBIProof(string memory _taskId, uint8 memory _taskType, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskId: _taskId,
-            taskTypes: _taskTypes,
+            taskType: _taskType,
             proof: _proof,
             isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskId, _taskTypes, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskId, _taskType, _proof);
     }
 }
