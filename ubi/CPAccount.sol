@@ -20,7 +20,7 @@ contract CPAccount {
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
     event MultiaddrsChanged(string[] newMultiaddrs);
     event BeneficiaryChanged(address previousBeneficiary, address newBeneficiary);
-    event UBIProofSubmitted(address indexed submitter, string taskId, uint8[] taskTypes, string proof);
+    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string proof);
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
