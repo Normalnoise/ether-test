@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 contract CPAccount {
+    address public contractRegistryAddress;
     address public owner;
     address public worker;
     string public nodeId;
@@ -37,9 +39,10 @@ contract CPAccount {
         multiAddresses = _multiAddresses;
         beneficiary = _beneficiary;
         worker = _worker;
+        contractRegistryAddress = _contractRegistryAddress;
 
         // Register CPAccount to ContractRegistry
-        registerToContractRegistry(_contractRegistryAddress);
+        registerToContractRegistry();
 
         // Emit event to notify CPAccount deployment
         emit CPAccountDeployed(address(this), owner);
@@ -50,7 +53,7 @@ contract CPAccount {
         _;
     }
 
-    function registerToContractRegistry(address contractRegistryAddress) private {
+    function registerToContractRegistry() private {
         // Call registerCPContract function of ContractRegistry
         (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("registerCPContract(address,address)", address(this), owner));
         require(success, "Failed to register CPContract to ContractRegistry");
@@ -99,7 +102,7 @@ contract CPAccount {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function submitUBIProof(string memory _taskId, uint8 memory _taskType, string memory _proof) public onlyOwner {
+    function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskId: _taskId,

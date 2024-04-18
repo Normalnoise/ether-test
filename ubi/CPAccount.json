@@ -2,11 +2,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      },
-      {
         "internalType": "string",
         "name": "_nodeId",
         "type": "string"
@@ -17,13 +12,18 @@
         "type": "string[]"
       },
       {
-        "internalType": "uint8",
-        "name": "_ubiFlag",
-        "type": "uint8"
+        "internalType": "address",
+        "name": "_beneficiary",
+        "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_beneficiaryAddress",
+        "name": "_worker",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_contractRegistryAddress",
         "type": "address"
       }
     ],
@@ -36,23 +36,49 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "beneficiary",
+        "name": "previousBeneficiary",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "quota",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "newBeneficiary",
+        "type": "address"
       }
     ],
     "name": "BeneficiaryChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "cpAccount",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "CPAccountDeployed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "newMultiaddrs",
+        "type": "string[]"
+      }
+    ],
+    "name": "MultiaddrsChanged",
     "type": "event"
   },
   {
@@ -72,19 +98,6 @@
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "ubiFlag",
-        "type": "uint8"
-      }
-    ],
-    "name": "UBIFlagChanged",
     "type": "event"
   },
   {
@@ -111,12 +124,6 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "zkType",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
         "name": "proof",
         "type": "string"
       }
@@ -125,23 +132,32 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousWorker",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newWorker",
+        "type": "address"
+      }
+    ],
+    "name": "WorkerChanged",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "beneficiary",
     "outputs": [
       {
         "internalType": "address",
-        "name": "beneficiaryAddress",
+        "name": "",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quota",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiration",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -153,16 +169,6 @@
         "internalType": "address",
         "name": "newBeneficiary",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newQuota",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "newExpiration",
-        "type": "uint256"
       }
     ],
     "name": "changeBeneficiary",
@@ -199,19 +205,71 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
-        "name": "newUbiFlag",
-        "type": "uint8"
+        "internalType": "address",
+        "name": "newWorker",
+        "type": "address"
       }
     ],
-    "name": "changeUbiFlag",
+    "name": "changeWorker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
+    "name": "contractRegistryAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBeneficiary",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMultiAddresses",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWorker",
     "outputs": [
       {
         "internalType": "address",
@@ -281,11 +339,6 @@
       },
       {
         "internalType": "string",
-        "name": "_zkType",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
         "name": "_proof",
         "type": "string"
       }
@@ -317,11 +370,6 @@
       },
       {
         "internalType": "string",
-        "name": "zkType",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
         "name": "proof",
         "type": "string"
       },
@@ -336,12 +384,12 @@
   },
   {
     "inputs": [],
-    "name": "ubiFlag",
+    "name": "worker",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "address",
         "name": "",
-        "type": "uint8"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
