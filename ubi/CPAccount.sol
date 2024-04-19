@@ -8,10 +8,11 @@ contract CPAccount {
     string public nodeId;
     string[] public multiAddresses;
     address public beneficiary;
+    uint8[] public taskTypes; // New property
 
     struct Task {
         string taskId;
-        uint8 taskType;
+        uint8 type; // Changed to 'type'
         string proof;
         bool isSubmitted;
     }
@@ -22,7 +23,8 @@ contract CPAccount {
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
     event MultiaddrsChanged(string[] newMultiaddrs);
     event BeneficiaryChanged(address previousBeneficiary, address newBeneficiary);
-    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string proof);
+    event TaskTypesChanged(uint8[] newTaskTypes); // New event
+    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 type, string proof); // Changed to 'type'
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
@@ -32,7 +34,8 @@ contract CPAccount {
         string[] memory _multiAddresses,
         address _beneficiary,
         address _worker,
-        address _contractRegistryAddress
+        address _contractRegistryAddress,
+        uint8[] memory _taskTypes // New parameter
     ) {
         owner = msg.sender;
         nodeId = _nodeId;
@@ -40,6 +43,7 @@ contract CPAccount {
         beneficiary = _beneficiary;
         worker = _worker;
         contractRegistryAddress = _contractRegistryAddress;
+        taskTypes = _taskTypes; // Initialize taskTypes
 
         // Register CPAccount to ContractRegistry
         registerToContractRegistry();
@@ -75,6 +79,16 @@ contract CPAccount {
         return multiAddresses;
     }
 
+    function getTaskTypes() public view returns (uint8[] memory) {
+        return taskTypes;
+    }
+
+    function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
+        taskTypes = newTaskTypes;
+
+        emit TaskTypesChanged(newTaskTypes);
+    }
+
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
 
@@ -102,15 +116,15 @@ contract CPAccount {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _proof) public onlyOwner {
+    function submitUBIProof(string memory _taskId, uint8 _type, string memory _proof) public onlyOwner {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskId: _taskId,
-            taskType: _taskType,
+            type: _type,
             proof: _proof,
             isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskId, _taskType, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskId, _type, _proof);
     }
 }
