@@ -8,11 +8,11 @@ contract CPAccount {
     string public nodeId;
     string[] public multiAddresses;
     address public beneficiary;
-    uint8[] public taskTypes; // New property
+    uint8[] public taskTypes;
 
     struct Task {
         string taskId;
-        uint8 type; // Changed to 'type'
+        uint8 type; 
         string proof;
         bool isSubmitted;
     }
