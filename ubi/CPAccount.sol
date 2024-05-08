@@ -11,8 +11,9 @@ contract CPAccount {
     uint8[] public taskTypes;
 
     struct Task {
+        address taskContract;
         string taskId;
-        uint8 taskType; 
+        uint8 taskType;
         string proof;
         bool isSubmitted;
     }
@@ -24,7 +25,7 @@ contract CPAccount {
     event MultiaddrsChanged(string[] newMultiaddrs);
     event BeneficiaryChanged(address previousBeneficiary, address newBeneficiary);
     event TaskTypesChanged(uint8[] newTaskTypes); // New event
-    event UBIProofSubmitted(address indexed submitter, string taskId, uint8 taskType, string proof); // Changed to 'type'
+    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string proof); // Changed to 'type'
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
@@ -35,7 +36,7 @@ contract CPAccount {
         address _beneficiary,
         address _worker,
         address _contractRegistryAddress,
-        uint8[] memory _taskTypes 
+        uint8[] memory _taskTypes
     ) {
         owner = msg.sender;
         nodeId = _nodeId;
@@ -56,6 +57,12 @@ contract CPAccount {
         require(msg.sender == owner, "Only owner can call this function.");
         _;
     }
+
+    modifier ownerAndWorker() {
+        require(msg.sender == owner|| msg.sender == worker, "owner and worker can call this function.");
+        _;
+    }
+
 
     function registerToContractRegistry() private {
         // Call registerCPContract function of ContractRegistry
@@ -116,15 +123,20 @@ contract CPAccount {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function submitUBIProof(string memory _taskId, uint8 _taskType, string memory _proof) public onlyOwner {
+    function getAccount() public view returns (address,address, string memory, string[] memory, uint8[] memory, address) {
+        return (owner, worker, nodeId, multiAddresses, taskTypes, beneficiary);
+    }
+
+    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _proof) public ownerAndWorker {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
+            taskContract: _taskContract
             taskId: _taskId,
             taskType: _taskType,
             proof: _proof,
             isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskId, _taskType, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _proof);
     }
 }
