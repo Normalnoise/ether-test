@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-contract CPAccount {
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     address public contractRegistryAddress;
     address public owner;
     address public worker;
@@ -30,14 +33,21 @@ contract CPAccount {
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         string memory _nodeId,
         string[] memory _multiAddresses,
         address _beneficiary,
         address _worker,
         address _contractRegistryAddress,
         uint8[] memory _taskTypes
-    ) {
+    ) initializer public {
+        __UUPSUpgradeable_init();
+
         owner = msg.sender;
         nodeId = _nodeId;
         multiAddresses = _multiAddresses;
@@ -138,5 +148,15 @@ contract CPAccount {
         });
 
         emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _proof);
+    }
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        onlyOwner
+        override
+    {}
+
+    function version() public pure returns(uint) {
+        return 1;
     }
 }
