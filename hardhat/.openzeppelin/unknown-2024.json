@@ -1,0 +1,197 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xf71755D16C353443d94D7F37f8511901DA988bB5",
+      "txHash": "0xb97f7966b86045542845d1e80635c2fe6f3eb94057ed4c78aa9add291e2db59b",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "75734261b9be4c3b5764074e2f98896dda295e47e92eefd27eff03287e4851ad": {
+      "address": "0x80B9ac32E712dc1762D83685bb62E6B6c3Ec04a0",
+      "txHash": "0x7602540b5fa34cd4694853d016e86e6aaa772234fa2065b9e1d1683ebe3cdca1",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "contractRegistryAddress",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:8"
+          },
+          {
+            "label": "owner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:9"
+          },
+          {
+            "label": "worker",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:10"
+          },
+          {
+            "label": "nodeId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_string_storage",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:11"
+          },
+          {
+            "label": "multiAddresses",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_array(t_string_storage)dyn_storage",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:12"
+          },
+          {
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:13"
+          },
+          {
+            "label": "taskTypes",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_array(t_uint8)dyn_storage",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:14"
+          },
+          {
+            "label": "tasks",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_string_memory_ptr,t_struct(Task)1566_storage)",
+            "contract": "CPAccountUpgradeable",
+            "src": "contracts/CPAccountUpgradeable.sol:24"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_string_storage)dyn_storage": {
+            "label": "string[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint8)dyn_storage": {
+            "label": "uint8[]",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_string_memory_ptr,t_struct(Task)1566_storage)": {
+            "label": "mapping(string => struct CPAccountUpgradeable.Task)",
+            "numberOfBytes": "32"
+          },
+          "t_string_memory_ptr": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Task)1566_storage": {
+            "label": "struct CPAccountUpgradeable.Task",
+            "members": [
+              {
+                "label": "taskContract",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "taskId",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "taskType",
+                "type": "t_uint8",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "proof",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "isSubmitted",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
