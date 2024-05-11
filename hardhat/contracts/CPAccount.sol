@@ -16,6 +16,7 @@ contract CPAccount {
         address taskContract;
         string taskId;
         uint8 taskType;
+        string ResourceType;
         string proof;
         bool isSubmitted;
     }
@@ -142,16 +143,17 @@ contract CPAccount {
         return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, VERSION);
     }
 
-    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _proof) public ownerAndWorker {
+    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string _resourceType, string memory _proof) public ownerAndWorker {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskContract: _taskContract,
             taskId: _taskId,
             taskType: _taskType,
+            resourceType: _resourceType,
             proof: _proof,
             isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _resourceType, _proof);
     }
 }
