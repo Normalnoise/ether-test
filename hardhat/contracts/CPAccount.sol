@@ -91,6 +91,9 @@ contract CPAccount {
     function getTaskTypes() public view returns (uint8[] memory) {
         return taskTypes;
     }
+    function getVersion() public pure returns (string memory) {
+        return VERSION;
+    }
 
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
         taskTypes = newTaskTypes;
