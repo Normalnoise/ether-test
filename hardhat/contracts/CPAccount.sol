@@ -25,10 +25,10 @@ contract CPAccount {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
-    event MultiaddrsChanged(string[] newMultiaddrs);
-    event BeneficiaryChanged(address previousBeneficiary, address newBeneficiary);
-    event TaskTypesChanged(uint8[] newTaskTypes); // New event
-    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string proof); // Changed to 'type'
+    event MultiaddrsChanged(string[] previousMultiaddrs, string[] newMultiaddrs);
+    event BeneficiaryChanged(address indexed previousBeneficiary, address indexed newBeneficiary);
+    event TaskTypesChanged(uint8[] previousTaskTypes, uint8[] newTaskTypes); // New event
+    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string resourceType, string proof); // Changed to 'type'
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
@@ -99,13 +99,13 @@ contract CPAccount {
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
         taskTypes = newTaskTypes;
 
-        emit TaskTypesChanged(newTaskTypes);
+        emit TaskTypesChanged(taskTypes, newTaskTypes);
     }
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
 
-        emit MultiaddrsChanged(newMultiaddrs);
+        emit MultiaddrsChanged(multiAddresses, newMultiaddrs);
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
