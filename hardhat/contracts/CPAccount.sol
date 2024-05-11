@@ -9,7 +9,7 @@ contract CPAccount {
     string[] public multiAddresses;
     address public beneficiary;
     uint8[] public taskTypes;
-    string public constant VERSION = "1.0"; // Contract version
+    string public constant VERSION = "2.0"; // Contract version
 
 
     struct Task {
