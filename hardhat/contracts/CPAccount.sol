@@ -9,6 +9,8 @@ contract CPAccount {
     string[] public multiAddresses;
     address public beneficiary;
     uint8[] public taskTypes;
+    string public constant VERSION = "1.0"; // Contract version
+
 
     struct Task {
         address taskContract;
@@ -130,10 +132,11 @@ contract CPAccount {
         address beneficiary;
         address worker;
         uint8[] taskTypes;
+        string version;
     }
 
     function getAccount() public view returns (CpInfo memory) {
-        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes);
+        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, VERSION);
     }
 
     function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _proof) public ownerAndWorker {
