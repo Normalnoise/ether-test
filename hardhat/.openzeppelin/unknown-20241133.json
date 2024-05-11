@@ -1,0 +1,179 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x2d3758c8bd86A0C8A5F0680127847257bE4fd4f5",
+      "txHash": "0x5171946dce0aab1cb23823ecc331d294d9d69d56544154d22cfe9d107063c8bc",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "3befc576847873d0c0dbf8a308fb84bb7fd2f676cd688da45071873fbb375d9f": {
+      "address": "0x1238aC614436Ba7E3ea89F7Fd813E415EE12fb4C",
+      "txHash": "0xa8a5e7cda94aba1069e069e6a0642a1198b3fcd96f782e5889725a7307db9c20",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "slashedFunds",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:9"
+          },
+          {
+            "label": "taskCapacity",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:10"
+          },
+          {
+            "label": "taskBalance",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:11"
+          },
+          {
+            "label": "isAdmin",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:13"
+          },
+          {
+            "label": "balances",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_int256)",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:14"
+          },
+          {
+            "label": "frozenBalance",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:15"
+          },
+          {
+            "label": "cpStatus",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_string_storage)",
+            "contract": "ECPCollateralUpgradeable",
+            "src": "contracts/ECPCollateralUpgradeable.sol:16"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)65_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)14_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_int256)": {
+            "label": "mapping(address => int256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_string_storage)": {
+            "label": "mapping(address => string)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
