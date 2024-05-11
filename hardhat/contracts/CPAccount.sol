@@ -123,8 +123,17 @@ contract CPAccount {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function getAccount() public view returns (address,address, string memory, string[] memory, uint8[] memory, address) {
-        return (owner, worker, nodeId, multiAddresses, taskTypes, beneficiary);
+    struct CpInfo {
+        address owner;
+        string nodeId;
+        string[] multiAddresses;
+        address beneficiary;
+        address worker;
+        uint8[] taskTypes;
+    }
+
+    function getAccount() public view returns (CpInfo memory) {
+        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes);
     }
 
     function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _proof) public ownerAndWorker {
