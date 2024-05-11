@@ -16,7 +16,7 @@ contract CPAccount {
         address taskContract;
         string taskId;
         uint8 taskType;
-        string resourceType;
+        uint8 resourceType;
         string proof;
         bool isSubmitted;
     }
@@ -28,7 +28,7 @@ contract CPAccount {
     event MultiaddrsChanged(string[] previousMultiaddrs, string[] newMultiaddrs);
     event BeneficiaryChanged(address indexed previousBeneficiary, address indexed newBeneficiary);
     event TaskTypesChanged(uint8[] previousTaskTypes, uint8[] newTaskTypes); // New event
-    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string resourceType, string proof); // Changed to 'type'
+    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, uint8 resourceType, string proof); // Changed to 'type'
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
@@ -143,7 +143,7 @@ contract CPAccount {
         return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, VERSION);
     }
 
-    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _resourceType, string memory _proof) public ownerAndWorker {
+    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, uint8 _resourceType, string memory _proof) public ownerAndWorker {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskContract: _taskContract,
