@@ -26,7 +26,7 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
     event MultiaddrsChanged(string[] newMultiaddrs);
-    event BeneficiaryChanged(address indexd previousBeneficiary, address indexd newBeneficiary);
+    event BeneficiaryChanged(address indexed previousBeneficiary, address indexed newBeneficiary);
     event TaskTypesChanged(uint8[] newTaskTypes); // New event
     event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string proof); // Changed to 'type'
 
