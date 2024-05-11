@@ -16,7 +16,7 @@ contract CPAccount {
         address taskContract;
         string taskId;
         uint8 taskType;
-        string ResourceType;
+        string resourceType;
         string proof;
         bool isSubmitted;
     }
