@@ -30,10 +30,6 @@ contract ECPCollateral is Ownable {
     event SlashCollateral(address cp, uint amount);
     event DisputeProof(address disputer, string proofTx);
     
-
-    constructor() Ownable(msg.sender) {
-        isAdmin[msg.sender] = true;
-    }
     constructor() Ownable(msg.sender) {
         isAdmin[msg.sender] = true;
         collateralRatio = 5; // set default collateralRatio
