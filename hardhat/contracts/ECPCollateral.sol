@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ECPCollateral is Ownable {
     uint public slashedFunds;
-    uint public taskCapacity;
+    uint public baseCollateral;
     uint public taskBalance;
     uint public collateralRatio;
     uint public slashRatio;
@@ -53,7 +53,7 @@ contract ECPCollateral is Ownable {
 
     struct ContractInfo {
         uint slashedFunds;
-        uint taskCapacity;
+        uint baseCollateral;
         uint taskBalance;
         uint collateralRatio;
         uint slashRatio;
@@ -62,7 +62,7 @@ contract ECPCollateral is Ownable {
     function getECPCollateralInfo() public view returns (ContractInfo memory) {
         ContractInfo memory info;
         info.slashedFunds = slashedFunds;
-        info.taskCapacity = taskCapacity;
+        info.baseCollateral = baseCollateral;
         info.taskBalance = taskBalance;
         info.collateralRatio = collateralRatio;
         info.slashRatio = slashRatio;
@@ -77,12 +77,12 @@ contract ECPCollateral is Ownable {
         slashRatio = _slashRatio;
     }
 
-    function setTaskCapacity(uint capacity) public onlyAdmin {
-        taskCapacity = capacity;
+    function setbaseCollateral(uint capacity) public onlyAdmin {
+        baseCollateral = capacity;
     }  
 
-    function getTaskCapacity() public pure returns (uint) {
-        return taskCapacity;
+    function getbaseCollateral() public pure returns (uint) {
+        return baseCollateral;
     }
 
     function cpInfo(address cpAddress) public view returns (CPInfo memory) {
@@ -97,7 +97,7 @@ contract ECPCollateral is Ownable {
     }
 
     function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(collateralRatio*taskCapacity)) {
+        if (balances[cpAddress] >= int(collateralRatio*baseCollateral)) {
             cpStatus[cpAddress] = 'zkAuction';
         } else {
             cpStatus[cpAddress] = 'NSC';
@@ -181,7 +181,7 @@ contract ECPCollateral is Ownable {
     }
 
     function slashCollateral(address cp) public onlyAdmin {
-        uint slashAmount = taskCapacity * slashRatio;
+        uint slashAmount = baseCollateral * slashRatio;
         balances[cp] -= int(slashAmount);
 
         slashedFunds += slashAmount;
