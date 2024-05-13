@@ -7,8 +7,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint public slashedFunds;
-    uint public taskCapacity;
+    uint public baseCollateral;
     uint public taskBalance;
+    uint public collateralRatio;
+    uint public slashRatio;
 
     mapping(address => bool) public isAdmin;
     mapping(address => int) public balances;
@@ -39,6 +41,8 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         __UUPSUpgradeable_init();
 
         isAdmin[msg.sender] = true;
+        collateralRatio = 5; // set default collateralRatio
+        slashRatio = 2;
     }
 
    // Modifier to check if the caller is the admin
@@ -55,8 +59,39 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         isAdmin[admin] = false;
     }
 
-    function setTaskCapacity(uint capacity) public onlyAdmin {
-        taskCapacity = capacity;
+    
+    struct ContractInfo {
+        uint slashedFunds;
+        uint baseCollateral;
+        uint taskBalance;
+        uint collateralRatio;
+        uint slashRatio;
+    }
+
+    function getECPCollateralInfo() public view returns (ContractInfo memory) {
+        ContractInfo memory info;
+        info.slashedFunds = slashedFunds;
+        info.baseCollateral = baseCollateral;
+        info.taskBalance = taskBalance;
+        info.collateralRatio = collateralRatio;
+        info.slashRatio = slashRatio;
+        return info;
+    }
+
+    function setCollateralRatio(uint _collateralRatio) public onlyOwner {
+        collateralRatio = _collateralRatio;
+    }
+
+    function setSlashRatio(uint _slashRatio) public onlyOwner {
+        slashRatio = _slashRatio;
+    }
+
+    function setbaseCollateral(uint capacity) public onlyAdmin {
+        baseCollateral = capacity;
+    }  
+
+    function getBaseCollateral() public view returns (uint) {
+        return baseCollateral;
     }
 
     function cpInfo(address cpAddress) public view returns (CPInfo memory) {
@@ -71,7 +106,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
     }
 
     function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(5*taskCapacity)) {
+        if (balances[cpAddress] >= int(collateralRatio*baseCollateral)) {
             cpStatus[cpAddress] = 'zkAuction';
         } else {
             cpStatus[cpAddress] = 'NSC';
@@ -155,7 +190,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
     }
 
     function slashCollateral(address cp) public onlyAdmin {
-        uint slashAmount = taskCapacity * 2;
+        uint slashAmount = baseCollateral * slashRatio;
         balances[cp] -= int(slashAmount);
 
         slashedFunds += slashAmount;
@@ -182,7 +217,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
     {}
 
     function version() public pure returns(uint) {
-        return 1;
+        return 2;
     }
 
 }
