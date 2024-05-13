@@ -7,6 +7,9 @@ contract ECPCollateral is Ownable {
     uint public slashedFunds;
     uint public taskCapacity;
     uint public taskBalance;
+    uint public collateralRatio;
+    uint public slashRatio;
+
 
     mapping(address => bool) public isAdmin;
     mapping(address => int) public balances;
@@ -31,6 +34,11 @@ contract ECPCollateral is Ownable {
     constructor() Ownable(msg.sender) {
         isAdmin[msg.sender] = true;
     }
+    constructor() Ownable(msg.sender) {
+        isAdmin[msg.sender] = true;
+        collateralRatio = 5; // set default collateralRatio
+        slashRatio = 2;
+    }
 
     // Modifier to check if the caller is the admin
     modifier onlyAdmin() {
@@ -44,6 +52,33 @@ contract ECPCollateral is Ownable {
 
     function removeAdmin(address admin) public onlyOwner {
         isAdmin[admin] = false;
+    }
+
+
+    struct ContractInfo {
+        uint slashedFunds;
+        uint taskCapacity;
+        uint taskBalance;
+        uint collateralRatio;
+        uint slashRatio;
+    }
+
+    function getECPCollateralInfo() public view returns (ContractInfo memory) {
+        ContractInfo memory info;
+        info.slashedFunds = slashedFunds;
+        info.taskCapacity = taskCapacity;
+        info.taskBalance = taskBalance;
+        info.collateralRatio = collateralRatio;
+        info.slashRatio = slashRatio;
+        return info;
+    }
+
+    function setCollateralRatio(uint _collateralRatio) public onlyOwner {
+        collateralRatio = _collateralRatio;
+    }
+
+    function setSlashRatio(uint _slashRatio) public onlyOwner {
+        slashRatio = _slashRatio;
     }
 
     function setTaskCapacity(uint capacity) public onlyAdmin {
@@ -66,7 +101,7 @@ contract ECPCollateral is Ownable {
     }
 
     function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(5*taskCapacity)) {
+        if (balances[cpAddress] >= int(collateralRatio*taskCapacity)) {
             cpStatus[cpAddress] = 'zkAuction';
         } else {
             cpStatus[cpAddress] = 'NSC';
@@ -150,7 +185,7 @@ contract ECPCollateral is Ownable {
     }
 
     function slashCollateral(address cp) public onlyAdmin {
-        uint slashAmount = taskCapacity * 2;
+        uint slashAmount = taskCapacity * slashRatio;
         balances[cp] -= int(slashAmount);
 
         slashedFunds += slashAmount;
