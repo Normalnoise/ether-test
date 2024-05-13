@@ -81,7 +81,7 @@ contract ECPCollateral is Ownable {
         baseCollateral = capacity;
     }  
 
-    function getbaseCollateral() public pure returns (uint) {
+    function getBaseCollateral() public view returns (uint) {
         return baseCollateral;
     }
 
