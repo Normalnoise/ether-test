@@ -18,14 +18,14 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         string reward_tx;
         string proof_tx;
         string status;
-        string deadline;
+        uint deadline;
         uint slash;
     }
 
     mapping(string => TaskInfo) public taskInfo;
     mapping(address => bool) public isAdmin;
 
-    event CreateTask(string id, uint typ, uint cpType, string inputParams, string verifyParams, string cpContracts, string rewardTx, string proofTx, string status, string deadline, uint slash);
+    event CreateTask(string id, uint typ, uint cpType, string inputParams, string verifyParams, string cpContracts, string rewardTx, string proofTx, string status, uint deadline, uint slash);
     event UpdateTaskInfo(string id, string rewardTx, string proofTx, string status, uint slash);
    
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -56,7 +56,7 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         string memory rewardTx, 
         string memory proofTx,
         string memory status,
-        string memory deadline,
+        uint deadline,
         uint slash
     ) public onlyAdmin {
         taskInfo[id] = TaskInfo(id, typ, cp_type, inputParam, verifyParam, cpContracts, rewardTx, proofTx, status, deadline, slash);
