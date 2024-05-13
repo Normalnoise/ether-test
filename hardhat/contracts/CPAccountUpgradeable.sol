@@ -17,21 +17,34 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         address taskContract;
         string taskId;
         uint8 taskType;
+        uint8 resourceType;
         string proof;
         bool isSubmitted;
+    }
+
+
+    struct CpInfo {
+        address owner;
+        string nodeId;
+        string[] multiAddresses;
+        address beneficiary;
+        address worker;
+        uint8[] taskTypes;
+        string version;
     }
 
     mapping(string => Task) public tasks;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
-    event MultiaddrsChanged(string[] newMultiaddrs);
+    event MultiaddrsChanged(string[] previousMultiaddrs, string[] newMultiaddrs);
     event BeneficiaryChanged(address indexed previousBeneficiary, address indexed newBeneficiary);
-    event TaskTypesChanged(uint8[] newTaskTypes); // New event
-    event UBIProofSubmitted(address indexed submitter, address taskContract, string taskId, uint8 taskType, string proof); // Changed to 'type'
+    event TaskTypesChanged(uint8[] previousTaskTypes, uint8[] newTaskTypes); // New event
+    event UBIProofSubmitted(address indexed submitter, address indexed taskContract, string taskId, uint8 taskType, uint8 resourceType, string proof); 
 
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -99,17 +112,20 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     function getTaskTypes() public view returns (uint8[] memory) {
         return taskTypes;
     }
+    function getVersion() public pure returns (string memory) {
+        return '2.0';
+    }
 
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
         taskTypes = newTaskTypes;
 
-        emit TaskTypesChanged(newTaskTypes);
+        emit TaskTypesChanged(taskTypes, newTaskTypes);
     }
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
         multiAddresses = newMultiaddrs;
 
-        emit MultiaddrsChanged(newMultiaddrs);
+        emit MultiaddrsChanged(multiAddresses, newMultiaddrs);
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
@@ -133,21 +149,24 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         emit WorkerChanged(worker, newWorker);
     }
 
-    function getAccount() public view returns (address,address, string memory, string[] memory, uint8[] memory, address) {
-        return (owner, worker, nodeId, multiAddresses, taskTypes, beneficiary);
+
+    function getAccount() public view returns (CpInfo memory) {
+        string memory currentVersion = getVersion();
+        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, currentVersion);
     }
 
-    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, string memory _proof) public ownerAndWorker {
+    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, uint8 _resourceType, string memory _proof) public ownerAndWorker {
         require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
         tasks[_taskId] = Task({
             taskContract: _taskContract,
             taskId: _taskId,
             taskType: _taskType,
+            resourceType: _resourceType,
             proof: _proof,
             isSubmitted: true
         });
 
-        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _proof);
+        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _resourceType, _proof);
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -155,8 +174,4 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         onlyOwner
         override
     {}
-
-    function version() public pure returns(uint) {
-        return 1;
-    }
 }
