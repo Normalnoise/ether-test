@@ -48,6 +48,10 @@ contract ECPCollateral is Ownable {
 
     function setTaskCapacity(uint capacity) public onlyAdmin {
         taskCapacity = capacity;
+    }  
+
+    function getTaskCapacity() public pure returns (uint) {
+        return taskCapacity;
     }
 
     function cpInfo(address cpAddress) public view returns (CPInfo memory) {
