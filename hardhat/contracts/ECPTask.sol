@@ -17,19 +17,36 @@ contract ECPTask is Ownable {
         string proof;
         string challengeTx;
         string lockFundTx;
-        string unLockFundTx;
+        string unlockFundTx;
         string slashTx;
         uint deadline;
         bool isSubmitted;
         bool isChallenged;
     }
 
-    TaskInfo public taskInfo;
+
+    uint public taskType;
+    uint public resourceType;
+    string public inputParam;
+    string public verifyParam;
+    address public cpContractAddress;
+    string public status;
+    string public rewardTx;
+    string public proof;
+    string public challengeTx;
+    string public lockFundTx;
+    string public unlockFundTx;
+    string public slashTx;
+    uint public deadline;
+    bool public isSubmitted;
+    bool public isChallenged;
+
+    // TaskInfo public taskInfo;
     mapping(address => bool) public isAdmin;
 
     event RewardAndStatusUpdated(string rewardTx, string status);
     event LockAndStatusUpdated(string lockFundTx, string status);
-    event UnlockAndStatusUpdated(string unLockFundTx, string status);
+    event UnlockAndStatusUpdated(string unlockFundTx, string status);
     event ChallengeAndStatusUpdated(string challengeTx, string status);
     event SlashAndStatusUpdated(string slashTx, string status);
 
@@ -45,23 +62,14 @@ contract ECPTask is Ownable {
         string memory _lockFundTx,
         uint _deadline
     ) Ownable(msg.sender) {
-        taskInfo = TaskInfo({
-            taskType: _taskType,
-            resourceType: _resourceType,
-            inputParam: _inputParam,
-            verifyParam: _verifyParam,
-            cpContractAddress: _cpContractAddress,
-            status: _status,
-            rewardTx: "",
-            proof: "",
-            challengeTx: "",
-            lockFundTx: _lockFundTx,
-            unLockFundTx: "",
-            slashTx: "",
-            deadline: _deadline,
-            isSubmitted: false,
-            isChallenged: false
-        });
+            taskType = _taskType;
+            resourceType= _resourceType;
+            inputParam= _inputParam;
+            verifyParam= _verifyParam;
+            cpContractAddress= _cpContractAddress;
+            status = _status;
+            deadline = _deadline;
+            lockFundTx = _lockFundTx;
         isAdmin[msg.sender] = true;
     }
 
@@ -72,69 +80,69 @@ contract ECPTask is Ownable {
     }
 
     function updateRewardAndStatus(
-        string memory rewardTx,
-        string memory status
+        string memory _rewardTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo.rewardTx = rewardTx;
-        taskInfo.status = status;
+        rewardTx = _rewardTx;
+        status = _status;
         emit RewardAndStatusUpdated(rewardTx, status);
     }
 
     function updateLockAndStatus(
-        string memory lockFundTx,
-        string memory status
+        string memory _lockFundTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo.lockFundTx = lockFundTx;
-        taskInfo.status = status;
+        lockFundTx = _lockFundTx;
+        status = _status;
         emit LockAndStatusUpdated(lockFundTx, status);
     }
 
     function updateUnlockAndStatus(
-        string memory unlockFundTx,
-        string memory status
+        string memory _unlockFundTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo.unLockFundTx = unlockFundTx;
-        taskInfo.status = status;
+        unlockFundTx = _unlockFundTx;
+        status = _status;
         emit UnlockAndStatusUpdated(unlockFundTx, status);
     }
 
     function updateChallengeAndStatus(
-        string memory challengeTx,
-        string memory status
+        string memory _challengeTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo.challengeTx = challengeTx;
-        taskInfo.status = status;
-        taskInfo.isChallenged = true;
+        challengeTx = _challengeTx;
+        status = _status;
+        isChallenged = true;
         emit ChallengeAndStatusUpdated(challengeTx, status);
     }
 
     function updateSlashAndStatus(
-        string memory slashTx,
-        string memory status
+        string memory _slashTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo.slashTx = slashTx;
-        taskInfo.status = status;
+        slashTx = _slashTx;
+        status = _status;
         emit SlashAndStatusUpdated(slashTx, status);
     }
 
-    function submitProof(string memory proof) public {
-        (bool successWorker, bytes memory CPOwner) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getOwner()"));
-        require(successOwner, "Failed to call getOwner function of CPAccount");
+    function submitProof(string memory _proof) public {
+        (bool success, bytes memory CPOwner) = cpContractAddress.call(abi.encodeWithSignature("getOwner()"));
+        require(success, "Failed to call getOwner function of CPAccount");
         address owner = abi.decode(CPOwner, (address));
 
-        (bool successWorker, bytes memory CPWorker) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getWorker()"));
-        require(successWorker, "Failed to call getWorker function of CPAccount");
+        (bool ok, bytes memory CPWorker) = cpContractAddress.call(abi.encodeWithSignature("getWorker()"));
+        require(ok, "Failed to call getWorker function of CPAccount");
         address worker = abi.decode(CPWorker, (address));
 
         require(msg.sender == owner || msg.sender == worker, "Only the CP contract owner or worker can submit proof.");
 
-        taskInfo.proof = proof;
-        taskInfo.isSubmitted = true;
+        proof = _proof;
+        isSubmitted = true;
         emit SubmitProof(proof);
     }
 
     function getTaskInfo() public view returns(TaskInfo memory) {
-        return taskInfo;
+        return TaskInfo(taskType, resourceType, inputParam,verifyParam, cpContractAddress,status,rewardTx,proof,challengeTx,lockFundTx,unlockFundTx,slashTx,deadline,isSubmitted,isChallenged);
     }
 
     function version() public pure returns(string memory) {
