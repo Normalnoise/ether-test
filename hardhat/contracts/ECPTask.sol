@@ -44,7 +44,7 @@ contract ECPTask is Ownable {
         string memory _status,
         string memory _lockFundTx,
         uint _deadline
-    ) {
+    ) Ownable(msg.sender) {
         taskInfo = TaskInfo({
             taskType: _taskType,
             resourceType: _resourceType,
@@ -118,12 +118,12 @@ contract ECPTask is Ownable {
     }
 
     function submitProof(string memory proof) public {
-        (bool success, bytes memory CPOwner) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getOwner()"));
-        require(success, "Failed to call getOwner function of CPAccount");
+        (bool successWorker, bytes memory CPOwner) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getOwner()"));
+        require(successOwner, "Failed to call getOwner function of CPAccount");
         address owner = abi.decode(CPOwner, (address));
 
-        (bool success, bytes memory CPWorker) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getWorker()"));
-        require(success, "Failed to call getWorker function of CPAccount");
+        (bool successWorker, bytes memory CPWorker) = taskInfo.cpContractAddress.call(abi.encodeWithSignature("getWorker()"));
+        require(successWorker, "Failed to call getWorker function of CPAccount");
         address worker = abi.decode(CPWorker, (address));
 
         require(msg.sender == owner || msg.sender == worker, "Only the CP contract owner or worker can submit proof.");
