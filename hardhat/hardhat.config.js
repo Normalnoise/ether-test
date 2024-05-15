@@ -1,7 +1,7 @@
 require('@nomicfoundation/hardhat-toolbox')
 require('@openzeppelin/hardhat-upgrades')
 require('./tasks/deployCollateral')
-require('./tasks/deployTask')
+// require('./tasks/deployTask')
 require('./tasks/upgradeAccount')
 require('./tasks/upgradeCollateral')
 require('./tasks/upgradeTask')
