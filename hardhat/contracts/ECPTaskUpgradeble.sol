@@ -8,35 +8,79 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
+    
     struct TaskInfo {
-        string id;
-        uint typ;
-        uint cp_type;
-        string input_param;
-        string verify_param;
-        string cp_contracts;
-        string reward_tx;
-        string proof_tx;
+        uint taskType;
+        uint resourceType;
+        string inputParam;
+        string verifyParam;
+        address cpContractAddress;
         string status;
+        string rewardTx;
+        string proof;
+        string challengeTx;
+        string lockFundTx;
+        string unlockFundTx;
+        string slashTx;
         uint deadline;
-        uint slash;
+        bool isSubmitted;
+        bool isChallenged;
     }
 
-    mapping(string => TaskInfo) public taskInfo;
+
+    uint public taskType;
+    uint public resourceType;
+    string public inputParam;
+    string public verifyParam;
+    address public cpContractAddress;
+    string public status;
+    string public rewardTx;
+    string public proof;
+    string public challengeTx;
+    string public lockFundTx;
+    string public unlockFundTx;
+    string public slashTx;
+    uint public deadline;
+    bool public isSubmitted;
+    bool public isChallenged;
+
+    // TaskInfo public taskInfo;
     mapping(address => bool) public isAdmin;
 
-    event CreateTask(string id, uint typ, uint cpType, string inputParams, string verifyParams, string cpContracts, string rewardTx, string proofTx, string status, uint deadline, uint slash);
-    event UpdateTaskInfo(string id, string rewardTx, string proofTx, string status, uint slash);
+    event RewardAndStatusUpdated(string rewardTx, string status);
+    event LockAndStatusUpdated(string lockFundTx, string status);
+    event UnlockAndStatusUpdated(string unlockFundTx, string status);
+    event ChallengeAndStatusUpdated(string challengeTx, string status);
+    event SlashAndStatusUpdated(string slashTx, string status);
+
+    event SubmitProof(string proof);
    
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize() initializer public {
+    function initialize(
+        uint _taskType,
+        uint _resourceType,
+        string memory _inputParam,
+        string memory _verifyParam,
+        address _cpContractAddress,
+        string memory _status,
+        string memory _lockFundTx,
+        uint _deadline
+    ) initializer public {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
+        taskType = _taskType;
+        resourceType= _resourceType;
+        inputParam= _inputParam;
+        verifyParam= _verifyParam;
+        cpContractAddress= _cpContractAddress;
+        status = _status;
+        deadline = _deadline;
+        lockFundTx = _lockFundTx;
         isAdmin[msg.sender] = true;
     }
 
@@ -46,36 +90,74 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         _;
     }
 
-    function createTask(
-        string memory id, 
-        uint typ, 
-        uint cp_type, 
-        string memory inputParam, 
-        string memory verifyParam, 
-        string memory cpContracts, 
-        string memory rewardTx, 
-        string memory proofTx,
-        string memory status,
-        uint deadline,
-        uint slash
+    function updateRewardAndStatus(
+        string memory _rewardTx,
+        string memory _status
     ) public onlyAdmin {
-        taskInfo[id] = TaskInfo(id, typ, cp_type, inputParam, verifyParam, cpContracts, rewardTx, proofTx, status, deadline, slash);
-        emit CreateTask(id, typ, cp_type, inputParam, verifyParam, cpContracts, rewardTx, proofTx, status, deadline, slash);
+        rewardTx = _rewardTx;
+        status = _status;
+        emit RewardAndStatusUpdated(rewardTx, status);
     }
 
-    function updateTaskInfo(
-        string memory id,
-        string memory rewardTx, 
-        string memory proofTx,
-        string memory status,
-        uint slash
+    function updateLockAndStatus(
+        string memory _lockFundTx,
+        string memory _status
     ) public onlyAdmin {
-        TaskInfo storage task = taskInfo[id];
-        task.reward_tx = rewardTx;
-        task.proof_tx = proofTx;
-        task.status = status;
-        task.slash = slash;
-        emit UpdateTaskInfo(id, rewardTx, proofTx, status, slash);
+        lockFundTx = _lockFundTx;
+        status = _status;
+        emit LockAndStatusUpdated(lockFundTx, status);
+    }
+
+    function updateUnlockAndStatus(
+        string memory _unlockFundTx,
+        string memory _status
+    ) public onlyAdmin {
+        unlockFundTx = _unlockFundTx;
+        status = _status;
+        emit UnlockAndStatusUpdated(unlockFundTx, status);
+    }
+
+    function updateChallengeAndStatus(
+        string memory _challengeTx,
+        string memory _status
+    ) public onlyAdmin {
+        challengeTx = _challengeTx;
+        status = _status;
+        isChallenged = true;
+        emit ChallengeAndStatusUpdated(challengeTx, status);
+    }
+
+    function updateSlashAndStatus(
+        string memory _slashTx,
+        string memory _status
+    ) public onlyAdmin {
+        slashTx = _slashTx;
+        status = _status;
+        emit SlashAndStatusUpdated(slashTx, status);
+    }
+
+    function submitProof(string memory _proof) public {
+        (bool success, bytes memory CPOwner) = cpContractAddress.call(abi.encodeWithSignature("getOwner()"));
+        require(success, "Failed to call getOwner function of CPAccount");
+        address owner = abi.decode(CPOwner, (address));
+
+        (bool ok, bytes memory CPWorker) = cpContractAddress.call(abi.encodeWithSignature("getWorker()"));
+        require(ok, "Failed to call getWorker function of CPAccount");
+        address worker = abi.decode(CPWorker, (address));
+
+        require(msg.sender == owner || msg.sender == worker, "Only the CP contract owner or worker can submit proof.");
+
+        proof = _proof;
+        isSubmitted = true;
+        emit SubmitProof(proof);
+    }
+
+    function getTaskInfo() public view returns(TaskInfo memory) {
+        return TaskInfo(taskType, resourceType, inputParam,verifyParam, cpContractAddress,status,rewardTx,proof,challengeTx,lockFundTx,unlockFundTx,slashTx,deadline,isSubmitted,isChallenged);
+    }
+
+    function version() public pure returns(string memory) {
+        return "1.0.0";
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -83,9 +165,5 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         onlyOwner
         override
     {}
-
-    function version() public pure returns(uint) {
-        return 1;
-    }
 
 }

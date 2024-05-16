@@ -12,36 +12,14 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     string[] public multiAddresses;
     address public beneficiary;
     uint8[] public taskTypes;
-
-    struct Task {
-        address taskContract;
-        string taskId;
-        uint8 taskType;
-        uint8 resourceType;
-        string proof;
-        bool isSubmitted;
-    }
-
-
-    struct CpInfo {
-        address owner;
-        string nodeId;
-        string[] multiAddresses;
-        address beneficiary;
-        address worker;
-        uint8[] taskTypes;
-        string version;
-    }
-
-    mapping(string => Task) public tasks;
+    string public VERSION; // Contract version
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event WorkerChanged(address indexed previousWorker, address indexed newWorker);
     event MultiaddrsChanged(string[] previousMultiaddrs, string[] newMultiaddrs);
     event BeneficiaryChanged(address indexed previousBeneficiary, address indexed newBeneficiary);
-    event TaskTypesChanged(uint8[] previousTaskTypes, uint8[] newTaskTypes); // New event
-    event UBIProofSubmitted(address indexed submitter, address indexed taskContract, string taskId, uint8 taskType, uint8 resourceType, string proof); 
-
+    event TaskTypesChanged(uint8[] previousTaskTypes, uint8[] newTaskTypes); 
+    
     // Event to notify ContractRegistry when CPAccount is deployed
     event CPAccountDeployed(address indexed cpAccount, address indexed owner);
 
@@ -68,6 +46,7 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         worker = _worker;
         contractRegistryAddress = _contractRegistryAddress;
         taskTypes = _taskTypes; // Initialize taskTypes
+        VERSION = '2.0';
 
         // Register CPAccount to ContractRegistry
         registerToContractRegistry();
@@ -112,8 +91,8 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     function getTaskTypes() public view returns (uint8[] memory) {
         return taskTypes;
     }
-    function getVersion() public pure returns (string memory) {
-        return '2.0';
+    function getVersion() public view returns (string memory) {
+        return VERSION;
     }
 
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
@@ -149,24 +128,18 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         emit WorkerChanged(worker, newWorker);
     }
 
-
-    function getAccount() public view returns (CpInfo memory) {
-        string memory currentVersion = getVersion();
-        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, currentVersion);
+    struct CpInfo {
+        address owner;
+        string nodeId;
+        string[] multiAddresses;
+        address beneficiary;
+        address worker;
+        uint8[] taskTypes;
+        string version;
     }
 
-    function submitUBIProof(address _taskContract, string memory _taskId, uint8 _taskType, uint8 _resourceType, string memory _proof) public ownerAndWorker {
-        require(!tasks[_taskId].isSubmitted, "Proof for this task is already submitted.");
-        tasks[_taskId] = Task({
-            taskContract: _taskContract,
-            taskId: _taskId,
-            taskType: _taskType,
-            resourceType: _resourceType,
-            proof: _proof,
-            isSubmitted: true
-        });
-
-        emit UBIProofSubmitted(msg.sender, _taskContract, _taskId, _taskType, _resourceType, _proof);
+    function getAccount() public view returns (CpInfo memory) {
+        return CpInfo(owner,nodeId, multiAddresses, beneficiary, worker, taskTypes, VERSION);
     }
 
     function _authorizeUpgrade(address newImplementation)
