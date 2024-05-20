@@ -51,7 +51,7 @@ contract ECPCollateral is Ownable {
     event TaskStatusChanged(address indexed taskContractAddress, uint newStatus);
     event CollateralAdjusted(address indexed cp, uint frozenAmount, uint balanceAmount, string operation);
 
-    constructor() {
+    constructor() Ownable(msg.sender) {
         _transferOwnership(msg.sender);
         isAdmin[msg.sender] = true;
         collateralRatio = 5; // Default collateral ratio
