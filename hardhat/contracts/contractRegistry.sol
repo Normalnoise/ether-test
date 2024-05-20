@@ -25,6 +25,7 @@ contract ContractRegistry {
     }
 
     function changeOwner(address cpContract, address newOwner) external {
+        require(owner != address(0), "Invalid owner address");
         cpContracts[cpContract].owner = newOwner;
 
         emit CPAddressChanged(cpContract, newOwner);
