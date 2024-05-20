@@ -10,46 +10,22 @@ contract ECPCollateral is Ownable {
     uint public collateralRatio;
     uint public slashRatio;
 
-
     mapping(address => bool) public isAdmin;
     mapping(address => int) public balances;
     mapping(address => uint) public frozenBalance;
+    mapping(address => Task) public tasks;
     mapping(address => string) public cpStatus;
 
-    struct CPInfo {
-        address cp;
-        int balance;
-        uint frozenBalance;
-        string status;
-    }
+    // Task status constants
+    uint private constant STATUS_LOCKED = 1;
+    uint private constant STATUS_UNLOCKED = 2;
+    uint private constant STATUS_SLASHED = 3;
 
-    event Deposit(address fundingWallet, address receivingWallet, uint depositAmount);
-    event Withdraw(address fundingWallet, uint withdrawAmount);
-    event LockCollateral(address cp, uint collateralAmount);
-    event UnlockCollateral(address cp, uint collateralAmount);
-    event SlashCollateral(address cp, uint amount);
-    event DisputeProof(address disputer, string proofTx);
-    
-    constructor() Ownable(msg.sender) {
-        isAdmin[msg.sender] = true;
-        collateralRatio = 5; // set default collateralRatio
-        slashRatio = 2;
+    struct Task {
+        address cpAccountAddress;
+        uint collateral;
+        uint status; // Status represented as a uint
     }
-
-    // Modifier to check if the caller is the admin
-    modifier onlyAdmin() {
-        require(isAdmin[msg.sender], "Only the admin can call this function.");
-        _;
-    }
-
-    function addAdmin(address newAdmin) public onlyOwner {
-        isAdmin[newAdmin] = true;
-    }
-
-    function removeAdmin(address admin) public onlyOwner {
-        isAdmin[admin] = false;
-    }
-
 
     struct ContractInfo {
         uint slashedFunds;
@@ -59,145 +35,151 @@ contract ECPCollateral is Ownable {
         uint slashRatio;
     }
 
-    function getECPCollateralInfo() public view returns (ContractInfo memory) {
-        ContractInfo memory info;
-        info.slashedFunds = slashedFunds;
-        info.baseCollateral = baseCollateral;
-        info.taskBalance = taskBalance;
-        info.collateralRatio = collateralRatio;
-        info.slashRatio = slashRatio;
-        return info;
+    struct CPInfo {
+        address cp;
+        int balance;
+        uint frozenBalance;
+        string status;
     }
 
-    function setCollateralRatio(uint _collateralRatio) public onlyOwner {
+    event Deposit(address indexed fundingWallet, address indexed cpAccount, uint depositAmount);
+    event Withdraw(address indexed cpOwner, address indexed cpAccount, uint withdrawAmount);
+    event CollateralLocked(address indexed cp, uint collateralAmount, address taskContractAddress);
+    event CollateralUnlocked(address indexed cp, uint collateralAmount, address taskContractAddress);
+    event CollateralSlashed(address indexed cp, uint amount, address taskContractAddress);
+    event TaskCreated(address indexed taskContractAddress, address cpAccountAddress, uint collateral);
+    event TaskStatusChanged(address indexed taskContractAddress, uint newStatus);
+    event CollateralAdjusted(address indexed cp, uint frozenAmount, uint balanceAmount, string operation);
+
+    constructor() {
+        _transferOwnership(msg.sender);
+        isAdmin[msg.sender] = true;
+        collateralRatio = 5; // Default collateral ratio
+        slashRatio = 2; // Default slash ratio
+    }
+
+    modifier onlyAdmin() {
+        require(isAdmin[msg.sender], "Only the admin can call this function.");
+        _;
+    }
+
+    function addAdmin(address newAdmin) external onlyOwner {
+        isAdmin[newAdmin] = true;
+    }
+
+    function removeAdmin(address admin) external onlyOwner {
+        isAdmin[admin] = false;
+    }
+
+    function lockCollateral(address cp, uint collateral, address taskContractAddress) external onlyAdmin {
+        require(balances[cp] >= int(collateral), "Not enough balance for collateral");
+        balances[cp] -= int(collateral);
+        frozenBalance[cp] += collateral;
+        tasks[taskContractAddress] = Task({
+            cpAccountAddress: cp,
+            collateral: collateral,
+            status: STATUS_LOCKED
+        });
+        checkCpInfo(cp);
+        emit CollateralLocked(cp, collateral, taskContractAddress);
+        emit TaskCreated(taskContractAddress, cp, collateral);
+    }
+
+    function unlockCollateral(address taskContractAddress) external onlyAdmin {
+        Task storage task = tasks[taskContractAddress];
+        uint availableAmount = frozenBalance[task.cpAccountAddress];
+        uint unlockAmount = task.collateral > availableAmount ? availableAmount : task.collateral;
+
+        frozenBalance[task.cpAccountAddress] -= unlockAmount;
+        balances[task.cpAccountAddress] += int(unlockAmount);
+        task.status = STATUS_UNLOCKED;
+        checkCpInfo(task.cpAccountAddress);
+        emit CollateralUnlocked(task.cpAccountAddress, unlockAmount, taskContractAddress);
+        emit TaskStatusChanged(taskContractAddress, STATUS_UNLOCKED);
+    }
+
+    function slashCollateral(address taskContractAddress) external onlyAdmin {
+        Task storage task = tasks[taskContractAddress];
+        uint slashAmount = task.collateral * slashRatio;
+        uint availableFrozen = frozenBalance[task.cpAccountAddress];
+        uint fromFrozen = slashAmount > availableFrozen ? availableFrozen : slashAmount;
+        uint fromBalance = slashAmount > fromFrozen ? slashAmount - fromFrozen : 0;
+        frozenBalance[task.cpAccountAddress] -= fromFrozen;
+        balances[task.cpAccountAddress] -= int(fromBalance);
+        slashedFunds += slashAmount;
+        task.status = STATUS_SLASHED;
+        checkCpInfo(task.cpAccountAddress);
+        emit CollateralSlashed(task.cpAccountAddress, slashAmount, taskContractAddress);
+        emit TaskStatusChanged(taskContractAddress, STATUS_SLASHED);
+        emit CollateralAdjusted(task.cpAccountAddress, fromFrozen, fromBalance, "Slashed");
+    }
+
+    function deposit(address cpAccount) public payable {
+        checkCpInfo(cpAccount);
+        balances[cpAccount] += int(msg.value);
+        emit Deposit(msg.sender, cpAccount, msg.value);
+    }
+
+    function withdraw(address cpAccount, uint amount) external {
+        checkCpInfo(cpAccount);
+        (bool success, bytes memory CPOwner) = cpAccount.call(abi.encodeWithSignature("getOwner()"));
+        require(success, "Failed to call getOwner function of CPAccount");
+        address cpOwner = abi.decode(CPOwner, (address));
+        require(balances[cpAccount] >= int(amount), "Withdraw amount exceeds balance");
+        require(msg.sender == cpOwner, "Only CP's owner can withdraw the collateral funds");
+        balances[cpAccount] -= int(amount);
+        payable(msg.sender).transfer(amount);
+        emit Withdraw(msg.sender, cpAccount, amount);
+    }
+
+    function getECPCollateralInfo() external view returns (ContractInfo memory) {
+        return ContractInfo({
+            slashedFunds: slashedFunds,
+            baseCollateral: baseCollateral,
+            taskBalance: taskBalance,
+            collateralRatio: collateralRatio,
+            slashRatio: slashRatio
+        });
+    }
+
+    function setCollateralRatio(uint _collateralRatio) external onlyOwner {
         collateralRatio = _collateralRatio;
     }
 
-    function setSlashRatio(uint _slashRatio) public onlyOwner {
+    function setSlashRatio(uint _slashRatio) external onlyOwner {
         slashRatio = _slashRatio;
     }
 
-    function setbaseCollateral(uint capacity) public onlyAdmin {
-        baseCollateral = capacity;
-    }  
+    function setBaseCollateral(uint _baseCollateral) external onlyAdmin {
+        baseCollateral = _baseCollateral;
+    }
 
-    function getBaseCollateral() public view returns (uint) {
+    function getBaseCollateral() external view returns (uint) {
         return baseCollateral;
     }
 
-    function cpInfo(address cpAddress) public view returns (CPInfo memory) {
-        CPInfo memory info;
-
-        info.cp = cpAddress;
-        info.balance = balances[cpAddress];
-        info.frozenBalance = frozenBalance[cpAddress];
-        info.status = cpStatus[cpAddress];
-
-        return info;
+    function cpInfo(address cpAddress) external view returns (CPInfo memory) {
+        return CPInfo({
+            cp: cpAddress,
+            balance: balances[cpAddress],
+            frozenBalance: frozenBalance[cpAddress],
+            status: cpStatus[cpAddress]
+        });
     }
 
     function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(collateralRatio*baseCollateral)) {
+        if (balances[cpAddress] >= int(collateralRatio * baseCollateral)) {
             cpStatus[cpAddress] = 'zkAuction';
         } else {
             cpStatus[cpAddress] = 'NSC';
         }
     }
 
+    function getTaskInfo(address taskContractAddress) external view returns (Task memory) {
+        return tasks[taskContractAddress];
+    }
+
     receive() external payable {
         deposit(msg.sender);
-    }
-
-    /**
-     * @notice - deposits tokens into the contract
-     */
-    function deposit(address recipient) public payable {
-        balances[recipient] += int(msg.value);
-
-        checkCpInfo(recipient);
-
-        emit Deposit(msg.sender, recipient, msg.value);
-    }
-
-    function withdraw(uint amount) public {
-        require(balances[msg.sender] >= int(amount), "Withdraw amount exceeds balance");
-
-        balances[msg.sender] -= int(amount);
-        payable(msg.sender).transfer(amount);
-
-        checkCpInfo(msg.sender);
-
-        emit Withdraw(msg.sender, amount);
-    }
-
-    function batchLockCollateral(address[] memory cpList, uint collateral) public onlyAdmin {
-        for (uint i = 0; i < cpList.length; i++) {
-            require(balances[cpList[i]] >= int(collateral), 'Not enough balance for collateral');
-        }
-
-        for (uint i = 0; i < cpList.length; i++) {
-            balances[cpList[i]] -= int(collateral);
-            frozenBalance[cpList[i]] += collateral;
-
-            checkCpInfo(cpList[i]);
-
-
-            emit LockCollateral(cpList[i], collateral);
-        }
-
-        uint totalCollateral = cpList.length * collateral;
-        taskBalance += totalCollateral;
-    }
-
-    function lockCollateral(address cp, uint collateral) public onlyAdmin {
-            require(balances[cp] >= int(collateral), 'Not enough balance for collateral');
-            balances[cp] -= int(collateral);
-            frozenBalance[cp] += collateral;
-
-            checkCpInfo(cp);
-        
-
-        uint totalCollateral = collateral;
-        taskBalance += totalCollateral;
-
-        emit LockCollateral(cp, collateral);
-    }
-    
-    function unlockCollateral(address recipient, uint amount) public onlyAdmin {
-        require(taskBalance >= amount, "Insufficient balance in task contract");
-
-        // frozen balance is non negative
-        if (frozenBalance[recipient] <= amount) {
-            amount = frozenBalance[recipient];
-        }
-        
-        taskBalance -= amount;
-        frozenBalance[recipient] -= amount;
-        balances[recipient] += int(amount);
-
-        checkCpInfo(recipient);
-
-        emit UnlockCollateral(recipient, amount);
-    }
-
-    function slashCollateral(address cp) public onlyAdmin {
-        uint slashAmount = baseCollateral * slashRatio;
-        balances[cp] -= int(slashAmount);
-
-        slashedFunds += slashAmount;
-
-        emit SlashCollateral(cp, slashAmount);
-    }
-
-    function disputeProof(string memory proofTx) public {
-        emit DisputeProof(msg.sender, proofTx);
-    }
-
-    function withdrawSlashedFunds() public onlyOwner {
-        uint amount = slashedFunds;
-        slashedFunds = 0;
-
-        payable(msg.sender).transfer(amount);
-        emit Withdraw(msg.sender, amount);
     }
 }
