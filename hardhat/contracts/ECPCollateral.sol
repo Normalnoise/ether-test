@@ -72,23 +72,6 @@ contract ECPCollateral is Ownable {
         isAdmin[admin] = false;
     }
 
-    function lockCollateral2(address cp, uint collateral, address taskContractAddress) external onlyAdmin {
-        if (balances[cp] <= int(collateral)) {
-            revert InsufficientBalance(cp, balances[cp], collateral);
-        }
-
-        balances[cp] -= int(collateral);
-        frozenBalance[cp] += collateral;
-        tasks[taskContractAddress] = Task({
-            cpAccountAddress: cp,
-            collateral: collateral,
-            status: STATUS_LOCKED
-        });
-        checkCpInfo(cp);
-        emit CollateralLocked(cp, collateral, taskContractAddress);
-        emit TaskCreated(taskContractAddress, cp, collateral);
-    }
-
     function lockCollateral(address cp, uint collateral, address taskContractAddress) external onlyAdmin {
         require(balances[cp] >= int(collateral), "Not enough balance for collateral");
         balances[cp] -= int(collateral);
