@@ -41,7 +41,6 @@ contract ECPCollateral is Ownable {
         uint frozenBalance;
         string status;
     }
-    error InsufficientBalance(address cp, int balance, uint required);
 
     event Deposit(address indexed fundingWallet, address indexed cpAccount, uint depositAmount);
     event Withdraw(address indexed cpOwner, address indexed cpAccount, uint withdrawAmount);
