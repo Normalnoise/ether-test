@@ -108,7 +108,7 @@ contract ECPCollateral is Ownable {
         balances[task.cpAccountAddress] -= int(fromBalance);
         slashedFunds += slashAmount;
         task.status = STATUS_SLASHED;
-        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0 
+        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0; 
         checkCpInfo(task.cpAccountAddress);
         emit CollateralSlashed(task.cpAccountAddress, slashAmount, taskContractAddress);
         emit TaskStatusChanged(taskContractAddress, STATUS_SLASHED);
