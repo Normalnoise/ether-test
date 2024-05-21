@@ -82,7 +82,7 @@ contract ECPCollateral is Ownable {
         tasks[taskContractAddress] = Task({
             cpAccountAddress: cp,
             collateral: collateral,
-            status: Status.LOCKED
+            status: TATUS_LOCKED
         });
         checkCpInfo(cp);
         emit CollateralLocked(cp, collateral, taskContractAddress);
