@@ -73,7 +73,7 @@ contract ECPCollateral is Ownable {
 
     function lockCollateral(address cp, address taskContractAddress) external onlyAdmin {
         require(balances[cp] >= int(collateral), "Not enough balance for collateral");
-        collateral = uint(collateralRatio * baseCollateral)
+        taskCollateral = uint(collateralRatio * baseCollateral);
         balances[cp] -= int(collateral);
         frozenBalance[cp] += collateral;
         tasks[taskContractAddress] = Task({
@@ -83,7 +83,7 @@ contract ECPCollateral is Ownable {
         });
         checkCpInfo(cp);
         emit CollateralLocked(cp, collateral, taskContractAddress);
-        emit TaskCreated(taskContractAddress, cp, collateral);
+        emit TaskCreated(taskContractAddress, cp, taskCollateral);
     }
 
     function unlockCollateral(address taskContractAddress) public onlyAdmin {
