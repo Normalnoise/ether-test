@@ -84,26 +84,20 @@ contract CPAccount {
     }
 
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
-        taskTypes = newTaskTypes;
-
         emit TaskTypesChanged(taskTypes, newTaskTypes);
+        taskTypes = newTaskTypes;
     }
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
-        multiAddresses = newMultiaddrs;
-
         emit MultiaddrsChanged(multiAddresses, newMultiaddrs);
+        multiAddresses = newMultiaddrs;
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
-        owner = newOwner;
-
-        // Emit event to notify ContractRegistry about owner change
-        emit OwnershipTransferred(msg.sender, newOwner);
 
         // Call changeOwner function of ContractRegistry to update owner
-        (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
-        require(success, "Failed to change owner in ContractRegistry");
+        // (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
+        // require(success, "Failed to change owner in ContractRegistry");
 
 
         // 调用 ContractRegistry 的 changeOwner 函数以更新所有者
@@ -120,6 +114,11 @@ contract CPAccount {
                 revert("Failed to change owner in ContractRegistry");
             }
         }
+
+        owner = newOwner;
+
+        // Emit event to notify ContractRegistry about owner change
+        emit OwnershipTransferred(msg.sender, newOwner);
     }
     function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
         if (_returnData.length < 68) return "Transaction reverted silently";

@@ -127,7 +127,6 @@ contract ECPCollateral is Ownable {
     }
 
     function withdraw(address cpAccount, uint amount) external {
-        checkCpInfo(cpAccount);
         (bool success, bytes memory CPOwner) = cpAccount.call(abi.encodeWithSignature("getOwner()"));
         require(success, "Failed to call getOwner function of CPAccount");
         address cpOwner = abi.decode(CPOwner, (address));
@@ -135,7 +134,10 @@ contract ECPCollateral is Ownable {
         require(msg.sender == cpOwner, "Only CP's owner can withdraw the collateral funds");
         balances[cpAccount] -= int(amount);
         payable(msg.sender).transfer(amount);
+
+        checkCpInfo(cpAccount);
         emit Withdraw(msg.sender, cpAccount, amount);
+        
     }
 
     function getECPCollateralInfo() external view returns (ContractInfo memory) {

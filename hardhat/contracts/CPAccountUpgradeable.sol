@@ -55,7 +55,7 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
         emit CPAccountDeployed(address(this), owner);
     }
 
-    modifier onlyOwner() {
+   modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function.");
         _;
     }
@@ -96,26 +96,49 @@ contract CPAccountUpgradeable is Initializable, UUPSUpgradeable {
     }
 
     function changeTaskTypes(uint8[] memory newTaskTypes) public onlyOwner {
-        taskTypes = newTaskTypes;
-
         emit TaskTypesChanged(taskTypes, newTaskTypes);
+        taskTypes = newTaskTypes;
     }
 
     function changeMultiaddrs(string[] memory newMultiaddrs) public onlyOwner {
-        multiAddresses = newMultiaddrs;
-
         emit MultiaddrsChanged(multiAddresses, newMultiaddrs);
+        multiAddresses = newMultiaddrs;
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
+
+        // Call changeOwner function of ContractRegistry to update owner
+        // (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
+        // require(success, "Failed to change owner in ContractRegistry");
+
+
+        // 调用 ContractRegistry 的 changeOwner 函数以更新所有者
+        (bool success, bytes memory data) = contractRegistryAddress.call(
+            abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner)
+        );
+
+        if (!success) {
+            // 尝试将返回的数据解码为字符串
+            if (data.length > 0) {
+                string memory errorMessage = _getRevertMsg(data);
+                revert(errorMessage);
+            } else {
+                revert("Failed to change owner in ContractRegistry");
+            }
+        }
+
         owner = newOwner;
 
         // Emit event to notify ContractRegistry about owner change
         emit OwnershipTransferred(msg.sender, newOwner);
-
-        // Call changeOwner function of ContractRegistry to update owner
-        (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
-        require(success, "Failed to change owner in ContractRegistry");
+    }
+    function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
+        if (_returnData.length < 68) return "Transaction reverted silently";
+        
+        assembly {
+            _returnData := add(_returnData, 0x04)
+        }
+        return abi.decode(_returnData, (string));
     }
 
     function changeBeneficiary(address newBeneficiary) public onlyOwner {
