@@ -71,8 +71,9 @@ contract ECPCollateral is Ownable {
         isAdmin[admin] = false;
     }
 
-    function lockCollateral(address cp, uint collateral, address taskContractAddress) external onlyAdmin {
+    function lockCollateral(address cp, address taskContractAddress) external onlyAdmin {
         require(balances[cp] >= int(collateral), "Not enough balance for collateral");
+        collateral = uint(collateralRatio * baseCollateral)
         balances[cp] -= int(collateral);
         frozenBalance[cp] += collateral;
         tasks[taskContractAddress] = Task({
@@ -101,7 +102,7 @@ contract ECPCollateral is Ownable {
 
     function slashCollateral(address taskContractAddress) external onlyAdmin {
         Task storage task = tasks[taskContractAddress];
-        uint slashAmount = task.collateral * slashRatio;
+        uint slashAmount = uint(baseCollateral * slashRatio);
         uint availableFrozen = frozenBalance[task.cpAccountAddress];
         uint fromFrozen = slashAmount > availableFrozen ? availableFrozen : slashAmount;
         uint fromBalance = slashAmount > fromFrozen ? slashAmount - fromFrozen : 0;
@@ -176,7 +177,7 @@ contract ECPCollateral is Ownable {
     }
 
     function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(collateralRatio * baseCollateral)) {
+        if (balances[cpAddress] >= uint(collateralRatio * baseCollateral)) {
             cpStatus[cpAddress] = 'zkAuction';
         } else {
             cpStatus[cpAddress] = 'NSC';
