@@ -105,6 +105,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         frozenBalance[task.cpAccountAddress] -= unlockAmount;
         balances[task.cpAccountAddress] += int(unlockAmount);
         task.status = STATUS_UNLOCKED;
+        task.collateral = 0;
         checkCpInfo(task.cpAccountAddress);
         emit CollateralUnlocked(task.cpAccountAddress, unlockAmount, taskContractAddress);
         emit TaskStatusChanged(taskContractAddress, STATUS_UNLOCKED);
