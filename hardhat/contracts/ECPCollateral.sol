@@ -85,13 +85,14 @@ contract ECPCollateral is Ownable {
         emit TaskCreated(taskContractAddress, cp, collateral);
     }
 
-    function unlockCollateral(address taskContractAddress) external onlyAdmin {
+    function unlockCollateral(address taskContractAddress) public onlyAdmin {
         Task storage task = tasks[taskContractAddress];
         uint availableAmount = frozenBalance[task.cpAccountAddress];
         uint unlockAmount = task.collateral > availableAmount ? availableAmount : task.collateral;
 
         frozenBalance[task.cpAccountAddress] -= unlockAmount;
         balances[task.cpAccountAddress] += int(unlockAmount);
+        task.collateral = 0;
         task.status = STATUS_UNLOCKED;
         checkCpInfo(task.cpAccountAddress);
         emit CollateralUnlocked(task.cpAccountAddress, unlockAmount, taskContractAddress);
@@ -108,11 +109,15 @@ contract ECPCollateral is Ownable {
         balances[task.cpAccountAddress] -= int(fromBalance);
         slashedFunds += slashAmount;
         task.status = STATUS_SLASHED;
-        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0; 
+        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0;
         checkCpInfo(task.cpAccountAddress);
         emit CollateralSlashed(task.cpAccountAddress, slashAmount, taskContractAddress);
         emit TaskStatusChanged(taskContractAddress, STATUS_SLASHED);
         emit CollateralAdjusted(task.cpAccountAddress, fromFrozen, fromBalance, "Slashed");
+
+        if (task.collateral > 0) {
+            unlockCollateral(taskContractAddress);
+        }
     }
 
     function deposit(address cpAccount) public payable {
