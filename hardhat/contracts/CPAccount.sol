@@ -122,13 +122,13 @@ contract CPAccount {
     }
 
     function changeBeneficiary(address newBeneficiary) public onlyOwner {
-        beneficiary = newBeneficiary;
         emit BeneficiaryChanged(beneficiary, newBeneficiary);
+        beneficiary = newBeneficiary;
     }
 
     function changeWorker(address newWorker) public onlyOwner {
-        worker = newWorker;
         emit WorkerChanged(worker, newWorker);
+        worker = newWorker;
     }
 
     struct CpInfo {
