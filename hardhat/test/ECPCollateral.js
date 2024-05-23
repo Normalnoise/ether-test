@@ -8,6 +8,10 @@ describe('ECPCollateral', function () {
     admin,
     newAdmin,
     cpAccount,
+    benficiary,
+    worker,
+    contractRegistry,
+    cpAccountContract,
     taskContract,
     addr1
 
@@ -17,6 +21,9 @@ describe('ECPCollateral', function () {
       admin,
       newAdmin,
       cpAccount,
+      benficiary,
+      worker,
+      contractRegistry,
       taskContract,
       addr1,
     ] = await ethers.getSigners()
@@ -133,24 +140,34 @@ describe('ECPCollateral', function () {
     )
   })
 
-  // it('Should allow withdrawal by CP owner', async function () {
-  //   await ecpCollateral
-  //     .connect(cpAccount)
-  //     .deposit(cpAccount.address, { value: ethers.parseEther('2') })
+  it('Should allow withdrawal by CP owner', async function () {
+    const CPAccountFactory = await ethers.getContractFactory(
+      'CPAccount',
+      cpAccount,
+    )
+    cpAccountContract = await CPAccountFactory.deploy(
+      'node1',
+      ['multiAddress1', 'multiAddress2'],
+      benficiary.address,
+      worker.address,
+      contractRegistry.address,
+      [1, 2, 3],
+    )
 
-  //   // Mock getOwner function on cpAccount
-  //   const MockCPAccount = await ethers.getContractFactory('MockCPAccount')
-  //   const mockCPAccount = await MockCPAccount.deploy(cpAccount.address)
-  //   await mockCPAccount.deployed()
+    await cpAccountContract.waitForDeployment()
 
-  //   await ecpCollateral
-  //     .connect(cpAccount)
-  //     .withdraw(mockCPAccount.address, ethers.parseEther('1'))
+    await ecpCollateral
+      .connect(cpAccount)
+      .deposit(cpAccountContract.target, { value: ethers.parseEther('2') })
 
-  //   expect(await ecpCollateral.balances(cpAccount.address)).to.equal(
-  //     ethers.parseEther('1'),
-  //   )
-  // })
+    await ecpCollateral
+      .connect(cpAccount)
+      .withdraw(cpAccountContract.target, ethers.parseEther('1'))
+
+    expect(await ecpCollateral.balances(cpAccountContract.target)).to.equal(
+      ethers.parseEther('1'),
+    )
+  })
 
   it('Should allow owner to withdraw slashed funds', async function () {
     await ecpCollateral.addAdmin(admin.address)
