@@ -44,6 +44,7 @@ contract ECPCollateral is Ownable {
 
     event Deposit(address indexed fundingWallet, address indexed cpAccount, uint depositAmount);
     event Withdraw(address indexed cpOwner, address indexed cpAccount, uint withdrawAmount);
+    event WithdrawSlash(address indexed collateralContratOwner, uint slashfund);
     event CollateralLocked(address indexed cp, uint collateralAmount, address taskContractAddress);
     event CollateralUnlocked(address indexed cp, uint collateralAmount, address taskContractAddress);
     event CollateralSlashed(address indexed cp, uint amount, address taskContractAddress);
@@ -183,12 +184,12 @@ contract ECPCollateral is Ownable {
             cpStatus[cpAddress] = 'NSC';
         }
     }
-    function withdrawSlashedFunds(unit slashfund) public onlyOwner {
-        require( slashedFunds >= slashfund), "Withdraw slashfund amount exceeds slashedFunds");
+    function withdrawSlashedFunds(uint slashfund) public onlyOwner {
+        require(slashedFunds >= slashfund, "Withdraw slashfund amount exceeds slashedFunds");
         slashedFunds -= slashfund;
 
         payable(msg.sender).transfer(slashfund);
-        emit Withdraw(msg.sender, slashfund);
+        emit WithdrawSlash(msg.sender, slashfund);
     }
 
     function getTaskInfo(address taskContractAddress) external view returns (Task memory) {
