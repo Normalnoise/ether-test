@@ -94,19 +94,11 @@ contract CPAccount {
     }
 
     function changeOwnerAddress(address newOwner) public onlyOwner {
-
-        // Call changeOwner function of ContractRegistry to update owner
-        // (bool success, ) = contractRegistryAddress.call(abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner));
-        // require(success, "Failed to change owner in ContractRegistry");
-
-
-        // 调用 ContractRegistry 的 changeOwner 函数以更新所有者
         (bool success, bytes memory data) = contractRegistryAddress.call(
             abi.encodeWithSignature("changeOwner(address,address)", address(this), newOwner)
         );
 
         if (!success) {
-            // 尝试将返回的数据解码为字符串
             if (data.length > 0) {
                 string memory errorMessage = _getRevertMsg(data);
                 revert(errorMessage);
