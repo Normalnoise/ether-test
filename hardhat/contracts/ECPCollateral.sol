@@ -183,12 +183,12 @@ contract ECPCollateral is Ownable {
             cpStatus[cpAddress] = 'NSC';
         }
     }
-    function withdrawSlashedFunds() public onlyOwner {
-        uint amount = slashedFunds;
-        slashedFunds = 0;
+    function withdrawSlashedFunds(unit slashfund) public onlyOwner {
+        require( slashedFunds >= slashfund), "Withdraw slashfund amount exceeds slashedFunds");
+        slashedFunds -= slashfund;
 
-        payable(msg.sender).transfer(amount);
-        emit Withdraw(msg.sender, amount);
+        payable(msg.sender).transfer(slashfund);
+        emit Withdraw(msg.sender, slashfund);
     }
 
     function getTaskInfo(address taskContractAddress) external view returns (Task memory) {
