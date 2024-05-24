@@ -51,6 +51,7 @@ contract ECPCollateral is Ownable {
     event TaskCreated(address indexed taskContractAddress, address cpAccountAddress, uint collateral);
     event TaskStatusChanged(address indexed taskContractAddress, uint newStatus);
     event CollateralAdjusted(address indexed cp, uint frozenAmount, uint balanceAmount, string operation);
+    event DisputeProof(address indexed challenger, address indexed taskContractAddress);
 
     constructor() Ownable(msg.sender) {
         _transferOwnership(msg.sender);
@@ -122,6 +123,9 @@ contract ECPCollateral is Ownable {
         }
     }
 
+    function disputeProof(address taskContractAddress) public {
+        emit DisputeProof(msg.sender, taskContractAddress);
+    }
     function deposit(address cpAccount) public payable {
         checkCpInfo(cpAccount);
         balances[cpAccount] += int(msg.value);
