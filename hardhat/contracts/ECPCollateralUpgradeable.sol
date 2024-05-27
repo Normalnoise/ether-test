@@ -45,6 +45,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
 
     event Deposit(address indexed fundingWallet, address indexed cpAccount, uint depositAmount);
     event Withdraw(address indexed cpOwner, address indexed cpAccount, uint withdrawAmount);
+    event WithdrawSlash(address indexed collateralContratOwner, uint slashfund);
     event CollateralLocked(address indexed cp, uint collateralAmount, address taskContractAddress);
     event CollateralUnlocked(address indexed cp, uint collateralAmount, address taskContractAddress);
     event CollateralSlashed(address indexed cp, uint amount, address taskContractAddress);
@@ -83,29 +84,30 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         isAdmin[admin] = false;
     }
 
-    function lockCollateral(address cp, uint collateral, address taskContractAddress) external onlyAdmin {
-        require(balances[cp] >= int(collateral), "Not enough balance for collateral");
-        balances[cp] -= int(collateral);
-        frozenBalance[cp] += collateral;
+    function lockCollateral(address cp, address taskContractAddress) external onlyAdmin {
+        uint taskCollateral = uint(collateralRatio * baseCollateral);
+        require(balances[cp] >= int(taskCollateral), "Not enough balance for collateral");
+        balances[cp] -= int(taskCollateral);
+        frozenBalance[cp] += taskCollateral;
         tasks[taskContractAddress] = Task({
             cpAccountAddress: cp,
-            collateral: collateral,
+            collateral: taskCollateral,
             status: STATUS_LOCKED
         });
         checkCpInfo(cp);
-        emit CollateralLocked(cp, collateral, taskContractAddress);
-        emit TaskCreated(taskContractAddress, cp, collateral);
+        emit CollateralLocked(cp, taskCollateral, taskContractAddress);
+        emit TaskCreated(taskContractAddress, cp, taskCollateral);
     }
 
-    function unlockCollateral(address taskContractAddress) external onlyAdmin {
+    function unlockCollateral(address taskContractAddress) public onlyAdmin {
         Task storage task = tasks[taskContractAddress];
         uint availableAmount = frozenBalance[task.cpAccountAddress];
         uint unlockAmount = task.collateral > availableAmount ? availableAmount : task.collateral;
 
         frozenBalance[task.cpAccountAddress] -= unlockAmount;
         balances[task.cpAccountAddress] += int(unlockAmount);
-        task.status = STATUS_UNLOCKED;
         task.collateral = 0;
+        task.status = STATUS_UNLOCKED;
         checkCpInfo(task.cpAccountAddress);
         emit CollateralUnlocked(task.cpAccountAddress, unlockAmount, taskContractAddress);
         emit TaskStatusChanged(taskContractAddress, STATUS_UNLOCKED);
@@ -113,7 +115,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
 
     function slashCollateral(address taskContractAddress) external onlyAdmin {
         Task storage task = tasks[taskContractAddress];
-        uint slashAmount = task.collateral * slashRatio;
+        uint slashAmount = uint(baseCollateral * slashRatio);
         uint availableFrozen = frozenBalance[task.cpAccountAddress];
         uint fromFrozen = slashAmount > availableFrozen ? availableFrozen : slashAmount;
         uint fromBalance = slashAmount > fromFrozen ? slashAmount - fromFrozen : 0;
@@ -121,16 +123,20 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         balances[task.cpAccountAddress] -= int(fromBalance);
         slashedFunds += slashAmount;
         task.status = STATUS_SLASHED;
-        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0; 
+        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0;
         checkCpInfo(task.cpAccountAddress);
         emit CollateralSlashed(task.cpAccountAddress, slashAmount, taskContractAddress);
         emit TaskStatusChanged(taskContractAddress, STATUS_SLASHED);
         emit CollateralAdjusted(task.cpAccountAddress, fromFrozen, fromBalance, "Slashed");
+
+        if (task.collateral > 0) {
+            unlockCollateral(taskContractAddress);
+        }
     }
 
     function deposit(address cpAccount) public payable {
-        balances[cpAccount] += int(msg.value);
         checkCpInfo(cpAccount);
+        balances[cpAccount] += int(msg.value);
         emit Deposit(msg.sender, cpAccount, msg.value);
     }
 
@@ -145,6 +151,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
 
         checkCpInfo(cpAccount);
         emit Withdraw(msg.sender, cpAccount, amount);
+        
     }
 
     function getECPCollateralInfo() external view returns (ContractInfo memory) {
@@ -188,6 +195,13 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         } else {
             cpStatus[cpAddress] = 'NSC';
         }
+    }
+    function withdrawSlashedFunds(uint slashfund) public onlyOwner {
+        require(slashedFunds >= slashfund, "Withdraw slashfund amount exceeds slashedFunds");
+        slashedFunds -= slashfund;
+
+        payable(msg.sender).transfer(slashfund);
+        emit WithdrawSlash(msg.sender, slashfund);
     }
 
     function getTaskInfo(address taskContractAddress) external view returns (Task memory) {
