@@ -127,9 +127,9 @@ contract ECPCollateral is Ownable {
         emit DisputeProof(msg.sender, taskContractAddress);
     }
     function deposit(address cpAccount) public payable {
-        checkCpInfo(cpAccount);
         balances[cpAccount] += int(msg.value);
         emit Deposit(msg.sender, cpAccount, msg.value);
+        checkCpInfo(cpAccount);
     }
 
     function withdraw(address cpAccount, uint amount) external {
