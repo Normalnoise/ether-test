@@ -90,10 +90,12 @@ contract ECPTask is Ownable {
 
     function updateLockAndStatus(
         string memory _lockFundTx,
-        string memory _status
+        string memory _status,
+        string memory _cpContractAddress
     ) public onlyAdmin {
         lockFundTx = _lockFundTx;
         status = _status;
+        cpContractAddress = _cpContractAddress
         emit LockAndStatusUpdated(lockFundTx, status);
     }
 
