@@ -52,6 +52,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
     event TaskCreated(address indexed taskContractAddress, address cpAccountAddress, uint collateral);
     event TaskStatusChanged(address indexed taskContractAddress, uint newStatus);
     event CollateralAdjusted(address indexed cp, uint frozenAmount, uint balanceAmount, string operation);
+    event DisputeProof(address indexed challenger, address indexed taskContractAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -71,7 +72,7 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         slashRatio = 2;
     }
 
-    modifier onlyAdmin() {
+     modifier onlyAdmin() {
         require(isAdmin[msg.sender], "Only the admin can call this function.");
         _;
     }
@@ -134,6 +135,9 @@ contract ECPCollateralUpgradeable is Initializable, OwnableUpgradeable, UUPSUpgr
         }
     }
 
+    function disputeProof(address taskContractAddress) public {
+        emit DisputeProof(msg.sender, taskContractAddress);
+    }
     function deposit(address cpAccount) public payable {
         balances[cpAccount] += int(msg.value);
         emit Deposit(msg.sender, cpAccount, msg.value);
