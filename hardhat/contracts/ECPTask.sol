@@ -62,6 +62,13 @@ contract ECPTask is Ownable {
         string memory _lockFundTx,
         uint _deadline
     ) Ownable(msg.sender) {
+
+            require(_taskType > 0, "Invalid task type");
+            require(_resourceType >= 0, "Invalid resource type");
+            require(bytes(_inputParam).length > 0, "Input parameter cannot be empty");
+            require(bytes(_status).length > 0, "Status cannot be empty");
+            require(_deadline > block.timestamp, "Deadline must be in the future");
+
             taskType = _taskType;
             resourceType= _resourceType;
             inputParam= _inputParam;
