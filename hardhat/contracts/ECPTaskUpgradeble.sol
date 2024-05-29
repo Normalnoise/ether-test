@@ -48,7 +48,7 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     mapping(address => bool) public isAdmin;
 
     event RewardAndStatusUpdated(string rewardTx, string status);
-    event LockAndStatusUpdated(string lockFundTx, string status);
+    event LockAndStatusUpdated(address cpContractAddress, string lockFundTx, string status);
     event UnlockAndStatusUpdated(string unlockFundTx, string status);
     event ChallengeAndStatusUpdated(string challengeTx, string status);
     event SlashAndStatusUpdated(string slashTx, string status);
@@ -101,10 +101,12 @@ contract ECPTask is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     function updateLockAndStatus(
         string memory _lockFundTx,
-        string memory _status
+        string memory _status,
+        address _cpContractAddress
     ) public onlyAdmin {
         lockFundTx = _lockFundTx;
         status = _status;
+        cpContractAddress = _cpContractAddress;
         emit LockAndStatusUpdated(lockFundTx, status);
     }
 
