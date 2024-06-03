@@ -67,7 +67,7 @@ contract ECPTask is Ownable {
             require(_resourceType >= 0, "Invalid resource type");
             require(bytes(_inputParam).length > 0, "Input parameter cannot be empty");
             require(bytes(_status).length > 0, "Status cannot be empty");
-            require(_deadline > 0, "Deadline must be in the future");
+            require(_deadline > 0, "Deadline must be positive");
 
             taskType = _taskType;
             resourceType= _resourceType;
