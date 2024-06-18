@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 contract ECPTask {
     // Task properties structure
     struct TaskInfo {
-        uint256 taskID;
-        uint256 taskType;
-        string resourceType;
+        uint taskID;
+        uint taskType;
+        uint resourceType;
         string inputParam;
         string verifyParam;
         address cpAccount;
         string proof;
-        uint256 deadline;
+        uint deadline;
         address taskRegistryContract;
         string checkCode;
         address owner;
@@ -22,24 +22,24 @@ contract ECPTask {
 
     // Event to log registration
     event RegisteredToTaskRegistry(address indexed taskContract, address indexed owner);
-    event TaskCreated(uint256 taskID, address cpAccount, string inputParam, uint256 deadline, string checkCode);
+    event TaskCreated(uint taskID, address cpAccount, string inputParam, uint deadline, string checkCode);
 
     // Constructor to initialize the task properties and register the task contract
     constructor(
-        uint256 _taskID,
-        uint256 _taskType,
-        string memory _resourceType,
+        uint _taskID,
+        uint _taskType,
+        uint _resourceType,
         string memory _inputParam,
         string memory _verifyParam,
         address _cpAccount,
         string memory _proof,
-        uint256 _deadline,
+        uint _deadline,
         address _taskRegistryContract,
         string memory _checkCode
     ) {
         require(_taskID > 0, "Task ID must be greater than zero");
         require(_taskType > 0, "Task type must be greater than zero");
-        require(bytes(_resourceType).length > 0, "Resource type must be provided");
+        require(_resourceType > 0, "Resource type must be provided");
         require(bytes(_inputParam).length > 0, "Input param must be provided");
         require(_cpAccount != address(0), "CP account address must be provided");
         require(_deadline > block.timestamp, "Deadline must be in the future");
