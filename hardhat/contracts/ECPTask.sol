@@ -15,10 +15,12 @@ contract ECPTask {
         address taskRegistryContract;
         string checkCode;
         address owner;
+        string version;
     }
 
     // Task properties
     TaskInfo public taskInfo;
+    string public constant version = "3.0";
 
     // Event to log registration
     event RegisteredToTaskRegistry(address indexed taskContract, address indexed owner);
@@ -57,7 +59,8 @@ contract ECPTask {
             deadline: _deadline,
             taskRegistryContract: _taskRegistryContract,
             checkCode: _checkCode,
-            owner: msg.sender
+            owner: msg.sender,
+            version: version
         });
 
         // Emit event to record task initialization
