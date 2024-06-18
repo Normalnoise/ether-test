@@ -2,28 +2,32 @@
 pragma solidity ^0.8.0;
 
 contract ECPTask {
-    // Task properties
-    uint256 public taskID;
-    string public taskType;
-    string public resourceType;
-    string public inputParam;
-    string public verifyParam;
-    address public cpAccount;
-    string public proof;
-    uint256 public deadline;
-    address public taskRegistryContract;
-    string public checkCode;
+    // Task properties structure
+    struct TaskInfo {
+        uint256 taskID;
+        uint256 taskType;
+        string resourceType;
+        string inputParam;
+        string verifyParam;
+        address cpAccount;
+        string proof;
+        uint256 deadline;
+        address taskRegistryContract;
+        string checkCode;
+        address owner;
+    }
 
-    // Contract owner
-    address public owner;
+    // Task properties
+    TaskInfo public taskInfo;
 
     // Event to log registration
     event RegisteredToTaskRegistry(address indexed taskContract, address indexed owner);
+    event TaskCreated(uint256 taskID, address cpAccount, string inputParam, uint256 deadline, string checkCode);
 
     // Constructor to initialize the task properties and register the task contract
     constructor(
         uint256 _taskID,
-        string memory _taskType,
+        uint256 _taskType,
         string memory _resourceType,
         string memory _inputParam,
         string memory _verifyParam,
@@ -33,17 +37,31 @@ contract ECPTask {
         address _taskRegistryContract,
         string memory _checkCode
     ) {
-        taskID = _taskID;
-        taskType = _taskType;
-        resourceType = _resourceType;
-        inputParam = _inputParam;
-        verifyParam = _verifyParam;
-        cpAccount = _cpAccount;
-        proof = _proof;
-        deadline = _deadline;
-        taskRegistryContract = _taskRegistryContract;
-        checkCode = _checkCode;
-        owner = msg.sender;
+        require(_taskID > 0, "Task ID must be greater than zero");
+        require(_taskType > 0, "Task type must be greater than zero");
+        require(bytes(_resourceType).length > 0, "Resource type must be provided");
+        require(bytes(_inputParam).length > 0, "Input param must be provided");
+        require(_cpAccount != address(0), "CP account address must be provided");
+        require(_deadline > block.timestamp, "Deadline must be in the future");
+        require(_taskRegistryContract != address(0), "Task registry contract address must be provided");
+        require(bytes(_checkCode).length > 0, "Check code must be provided");
+
+        taskInfo = TaskInfo({
+            taskID: _taskID,
+            taskType: _taskType,
+            resourceType: _resourceType,
+            inputParam: _inputParam,
+            verifyParam: _verifyParam,
+            cpAccount: _cpAccount,
+            proof: _proof,
+            deadline: _deadline,
+            taskRegistryContract: _taskRegistryContract,
+            checkCode: _checkCode,
+            owner: msg.sender
+        });
+
+        // Emit event to record task initialization
+        emit TaskCreated(_taskID, _cpAccount, _inputParam, _deadline, _checkCode);
 
         // Register this task contract with the TaskRegistry
         registerToTaskRegistry();
@@ -51,17 +69,21 @@ contract ECPTask {
 
     // Private function to register this contract with the TaskRegistry
     function registerToTaskRegistry() private {
-        (bool success, ) = taskRegistryContract.call(
+        (bool success, ) = taskInfo.taskRegistryContract.call(
             abi.encodeWithSignature(
                 "registerTaskContract(address,address)",
                 address(this),
-                owner
+                taskInfo.owner
             )
         );
         require(success, "Failed to register task contract to TaskRegistry");
-        
+
         // Emit the event after successful registration
-        emit RegisteredToTaskRegistry(address(this), owner);
+        emit RegisteredToTaskRegistry(address(this), taskInfo.owner);
     }
 
+    // Function to get task information
+    function getTaskInfo() external view returns (TaskInfo memory) {
+        return taskInfo;
+    }
 }
