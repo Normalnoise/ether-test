@@ -13,7 +13,7 @@ contract ECPCollateral is Ownable {
     mapping(address => bool) public isAdmin;
     mapping(address => int) public balances;
     mapping(address => uint) public frozenBalance;
-    mapping(address => Task) public tasks;
+    mapping(uint => Task) public tasks;
     mapping(address => string) public cpStatus;
 
     // Task status constants
