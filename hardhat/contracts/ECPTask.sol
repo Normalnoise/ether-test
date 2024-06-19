@@ -84,9 +84,4 @@ contract ECPTask {
         // Emit the event after successful registration
         emit RegisteredToTaskRegistry(address(this), taskInfo.owner);
     }
-
-    // Function to get task information
-    function getTaskInfo() external view returns (TaskInfo memory) {
-        return taskInfo;
-    }
 }
