@@ -41,7 +41,7 @@ contract ECPTask {
     ) {
         require(_taskID > 0, "Task ID must be greater than zero");
         require(_taskType > 0, "Task type must be greater than zero");
-        require(_resourceType > 0, "Resource type must be provided");
+        require(_resourceType >= 0, "Resource type must be greater than or equal to zero");
         require(bytes(_inputParam).length > 0, "Input param must be provided");
         require(_cpAccount != address(0), "CP account address must be provided");
         require(_deadline > block.number, "Deadline must be in the future");
