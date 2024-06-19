@@ -44,7 +44,7 @@ contract ECPTask {
         require(_resourceType > 0, "Resource type must be provided");
         require(bytes(_inputParam).length > 0, "Input param must be provided");
         require(_cpAccount != address(0), "CP account address must be provided");
-        require(_deadline > block.timestamp, "Deadline must be in the future");
+        require(_deadline > block.number, "Deadline must be in the future");
         require(_taskRegistryContract != address(0), "Task registry contract address must be provided");
         require(bytes(_checkCode).length > 0, "Check code must be provided");
 
