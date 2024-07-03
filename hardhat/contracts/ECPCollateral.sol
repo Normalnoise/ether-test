@@ -2,8 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ECPCollateral is Ownable {
+    IERC20 public collateralToken;
     uint public slashedFunds;
     uint public baseCollateral;
     uint public taskBalance;
@@ -149,9 +151,16 @@ contract ECPCollateral is Ownable {
     }
 
 
-    function deposit(address cpAccount) public payable {
-        balances[cpAccount] += int(msg.value);
-        emit Deposit(msg.sender, cpAccount, msg.value);
+    // function deposit(address cpAccount) public payable {
+    //     balances[cpAccount] += int(msg.value);
+    //     emit Deposit(msg.sender, cpAccount, msg.value);
+    //     checkCpInfo(cpAccount);
+    // }
+
+    function deposit(address cpAccount, uint amount) public {
+        collateralToken.transferFrom(msg.sender, address(this), amount);
+        balances[cpAccount] += int(amount);
+        emit Deposit(msg.sender, cpAccount, amount);
         checkCpInfo(cpAccount);
     }
 
@@ -162,7 +171,8 @@ contract ECPCollateral is Ownable {
         require(balances[cpAccount] >= int(amount), "Withdraw amount exceeds balance");
         require(msg.sender == cpOwner, "Only CP's owner can withdraw the collateral funds");
         balances[cpAccount] -= int(amount);
-        payable(msg.sender).transfer(amount);
+        // payable(msg.sender).transfer(amount);
+        collateralToken.transfer(msg.sender, amount);
 
         checkCpInfo(cpAccount);
         emit Withdraw(msg.sender, cpAccount, amount);
@@ -177,6 +187,10 @@ contract ECPCollateral is Ownable {
             collateralRatio: collateralRatio,
             slashRatio: slashRatio
         });
+    }
+
+    function setCollateralToken(address tokenAddress) external onlyOwner {
+        collateralToken = IERC20(tokenAddress);
     }
 
     function setCollateralRatio(uint _collateralRatio) external onlyOwner {
@@ -215,7 +229,8 @@ contract ECPCollateral is Ownable {
         require(slashedFunds >= slashfund, "Withdraw slashfund amount exceeds slashedFunds");
         slashedFunds -= slashfund;
 
-        payable(msg.sender).transfer(slashfund);
+        // payable(msg.sender).transfer(slashfund);
+        collateralToken.transfer(msg.sender, slashfund);
         emit WithdrawSlash(msg.sender, slashfund);
     }
 
@@ -223,7 +238,7 @@ contract ECPCollateral is Ownable {
         return tasks[taskID];
     }
 
-    receive() external payable {
-        deposit(msg.sender);
-    }
+    // receive() external payable {
+    //     deposit(msg.sender);
+    // }
 }
