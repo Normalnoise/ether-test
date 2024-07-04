@@ -8,31 +8,18 @@ contract ECPCollateral is Ownable {
     IERC20 public collateralToken;
     uint public slashedFunds;
     uint public baseCollateral;
-    uint public taskBalance;
     uint public collateralRatio;
     uint public slashRatio;
 
     mapping(address => bool) public isAdmin;
     mapping(address => int) public balances;
     mapping(address => uint) public frozenBalance;
-    mapping(uint => Task) public tasks;
     mapping(address => string) public cpStatus;
-
-    // Task status constants
-    uint private constant STATUS_LOCKED = 1;
-    uint private constant STATUS_UNLOCKED = 2;
-    uint private constant STATUS_SLASHED = 3;
-
-    struct Task {
-        address cpAccountAddress;
-        uint collateral;
-        uint status; // Status represented as a uint
-    }
+    
 
     struct ContractInfo {
         uint slashedFunds;
         uint baseCollateral;
-        uint taskBalance;
         uint collateralRatio;
         uint slashRatio;
     }
@@ -47,13 +34,11 @@ contract ECPCollateral is Ownable {
     event Deposit(address indexed fundingWallet, address indexed cpAccount, uint depositAmount);
     event Withdraw(address indexed cpOwner, address indexed cpAccount, uint withdrawAmount);
     event WithdrawSlash(address indexed collateralContratOwner, uint slashfund);
-    event CollateralLocked(address indexed cp, uint collateralAmount, uint taskID);
-    event CollateralUnlocked(address indexed cp, uint collateralAmount, uint taskID);
-    event CollateralSlashed(address indexed cp, uint amount, uint taskID);
-    event TaskCreated(uint indexed taskID, address cpAccountAddress, uint collateral);
-    event TaskStatusChanged(uint indexed taskID, uint newStatus);
+    event CollateralLocked(address indexed cp, uint collateralAmount);
+    event CollateralUnlocked(address indexed cp, uint collateralAmount);
+    event CollateralSlashed(address indexed cp, uint amount);
     event CollateralAdjusted(address indexed cp, uint frozenAmount, uint balanceAmount, string operation);
-    event DisputeProof(address indexed challenger, address indexed taskContractAddress);
+    event DisputeProof(address indexed challenger, address indexed taskContractAddress, address cpAccount, uint taskID);
 
 
     constructor() Ownable(msg.sender) {
@@ -76,86 +61,63 @@ contract ECPCollateral is Ownable {
         isAdmin[admin] = false;
     }
 
-    function lockCollateral(address cp, uint taskID) public onlyAdmin {
-        uint taskCollateral = uint(collateralRatio * baseCollateral);
+    function lockCollateral(address cp, uint taskCollateral) public onlyAdmin {
         require(balances[cp] >= int(taskCollateral), "Not enough balance for collateral");
         balances[cp] -= int(taskCollateral);
         frozenBalance[cp] += taskCollateral;
-        tasks[taskID] = Task({
-            cpAccountAddress: cp,
-            collateral: taskCollateral,
-            status: STATUS_LOCKED
-        });
         checkCpInfo(cp);
-        emit CollateralLocked(cp, taskCollateral, taskID);
-        emit TaskCreated(taskID, cp, taskCollateral);
+        emit CollateralLocked(cp, taskCollateral);
     }
 
-    function unlockCollateral(uint taskID) public onlyAdmin {
-        Task storage task = tasks[taskID];
-        uint availableAmount = frozenBalance[task.cpAccountAddress];
-        uint unlockAmount = task.collateral > availableAmount ? availableAmount : task.collateral;
+    function unlockCollateral(address cp, uint taskCollateral) public onlyAdmin {
+//        Task storage task = tasks[taskID];
+        uint availableAmount = frozenBalance[cp];
+        uint unlockAmount = taskCollateral > availableAmount ? availableAmount : taskCollateral;
 
-        frozenBalance[task.cpAccountAddress] -= unlockAmount;
-        balances[task.cpAccountAddress] += int(unlockAmount);
-        task.collateral = 0;
-        task.status = STATUS_UNLOCKED;
-        checkCpInfo(task.cpAccountAddress);
-        emit CollateralUnlocked(task.cpAccountAddress, unlockAmount, taskID);
-        emit TaskStatusChanged(taskID, STATUS_UNLOCKED);
+        frozenBalance[cp] -= unlockAmount;
+        balances[cp] += int(unlockAmount);
+        checkCpInfo(cp);
+        emit CollateralUnlocked(cp, unlockAmount);
+//        emit TaskStatusChanged(taskID, STATUS_UNLOCKED);
     }
 
-    function slashCollateral(uint taskID) public onlyAdmin {
-        Task storage task = tasks[taskID];
-        uint slashAmount = uint(baseCollateral * slashRatio);
-        uint availableFrozen = frozenBalance[task.cpAccountAddress];
+    function slashCollateral(address cp, uint slashAmount) public onlyAdmin {
+        uint availableFrozen = frozenBalance[cp];
         uint fromFrozen = slashAmount > availableFrozen ? availableFrozen : slashAmount;
         uint fromBalance = slashAmount > fromFrozen ? slashAmount - fromFrozen : 0;
-        frozenBalance[task.cpAccountAddress] -= fromFrozen;
-        balances[task.cpAccountAddress] -= int(fromBalance);
+        frozenBalance[cp] -= fromFrozen;
+        balances[cp] -= int(fromBalance);
         slashedFunds += slashAmount;
-        task.status = STATUS_SLASHED;
-        task.collateral = task.collateral > slashAmount ? task.collateral - slashAmount : 0;
-        checkCpInfo(task.cpAccountAddress);
-        emit CollateralSlashed(task.cpAccountAddress, slashAmount, taskID);
-        emit TaskStatusChanged(taskID, STATUS_SLASHED);
-        emit CollateralAdjusted(task.cpAccountAddress, fromFrozen, fromBalance, "Slashed");
+        checkCpInfo(cp);
+        emit CollateralSlashed(cp, slashAmount);
+        emit CollateralAdjusted(cp, fromFrozen, fromBalance, "Slashed");
+    }
 
-        if (task.collateral > 0) {
-            unlockCollateral(taskID);
+    function batchLock(address[] calldata cps, uint[] calldata taskCollaterals) external onlyAdmin {
+        require(cps.length == taskCollaterals.length, "Array lengths must match");
+
+        for (uint i = 0; i < cps.length; i++) {
+            lockCollateral(cps[i], taskCollaterals[i]);
         }
     }
 
-    function batchLock(address[] calldata cpAddresses, uint[] calldata taskIDs) external onlyAdmin {
-        require(cpAddresses.length == taskIDs.length, "Array lengths must match");
-
-        for (uint i = 0; i < cpAddresses.length; i++) {
-            lockCollateral(cpAddresses[i], taskIDs[i]);
+    function batchUnlock(address[] calldata cps, uint[] calldata taskCollaterals) external onlyAdmin {
+        require(cps.length == taskCollaterals.length, "Array lengths must match");
+        for (uint i = 0; i < cps.length; i++) {
+            unlockCollateral(cps[i], taskCollaterals[i]);
         }
     }
 
-    function batchUnlock(uint[] calldata taskIDs) external onlyAdmin {
-        for (uint i = 0; i < taskIDs.length; i++) {
-            unlockCollateral(taskIDs[i]);
+    function batchSlash(address[] calldata cps, uint[] calldata slashAmounts) external onlyAdmin {
+        for (uint i = 0; i < cps.length; i++) {
+            slashCollateral(cps[i], slashAmounts[i]);
         }
     }
 
-    function batchSlash(uint[] calldata taskIDs) external onlyAdmin {
-        for (uint i = 0; i < taskIDs.length; i++) {
-            slashCollateral(taskIDs[i]);
-        }
+    function disputeProof(address taskContractAddress, address cpAccount, uint taskID) public {
+        emit DisputeProof(msg.sender, taskContractAddress, cpAccount, taskID);
     }
 
-    function disputeProof(address taskContractAddress) public {
-        emit DisputeProof(msg.sender, taskContractAddress);
-    }
-
-
-    // function deposit(address cpAccount) public payable {
-    //     balances[cpAccount] += int(msg.value);
-    //     emit Deposit(msg.sender, cpAccount, msg.value);
-    //     checkCpInfo(cpAccount);
-    // }
 
     function deposit(address cpAccount, uint amount) public {
         collateralToken.transferFrom(msg.sender, address(this), amount);
@@ -183,7 +145,6 @@ contract ECPCollateral is Ownable {
         return ContractInfo({
             slashedFunds: slashedFunds,
             baseCollateral: baseCollateral,
-            taskBalance: taskBalance,
             collateralRatio: collateralRatio,
             slashRatio: slashRatio
         });
@@ -209,36 +170,29 @@ contract ECPCollateral is Ownable {
         return baseCollateral;
     }
 
-    function cpInfo(address cpAddress) external view returns (CPInfo memory) {
+    function cpInfo(address cpAccount) external view returns (CPInfo memory) {
         return CPInfo({
-            cp: cpAddress,
-            balance: balances[cpAddress],
-            frozenBalance: frozenBalance[cpAddress],
-            status: cpStatus[cpAddress]
+            cp: cpAccount,
+            balance: balances[cpAccount],
+            frozenBalance: frozenBalance[cpAccount],
+            status: cpStatus[cpAccount]
         });
     }
 
-    function checkCpInfo(address cpAddress) internal {
-        if (balances[cpAddress] >= int(collateralRatio * baseCollateral)) {
-            cpStatus[cpAddress] = 'zkAuction';
+    function checkCpInfo(address cpAccount) internal {
+        if (balances[cpAccount] >= int(collateralRatio * baseCollateral)) {
+            cpStatus[cpAccount] = 'zkAuction';
         } else {
-            cpStatus[cpAddress] = 'NSC';
+            cpStatus[cpAccount] = 'NSC';
         }
     }
+
+
     function withdrawSlashedFunds(uint slashfund) public onlyOwner {
         require(slashedFunds >= slashfund, "Withdraw slashfund amount exceeds slashedFunds");
         slashedFunds -= slashfund;
-
-        // payable(msg.sender).transfer(slashfund);
         collateralToken.transfer(msg.sender, slashfund);
         emit WithdrawSlash(msg.sender, slashfund);
     }
 
-    function getTaskInfo(uint taskID) external view returns (Task memory) {
-        return tasks[taskID];
-    }
-
-    // receive() external payable {
-    //     deposit(msg.sender);
-    // }
 }
