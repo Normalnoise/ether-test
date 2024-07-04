@@ -70,7 +70,6 @@ contract ECPCollateral is Ownable {
     }
 
     function unlockCollateral(address cp, uint taskCollateral) public onlyAdmin {
-//        Task storage task = tasks[taskID];
         uint availableAmount = frozenBalance[cp];
         uint unlockAmount = taskCollateral > availableAmount ? availableAmount : taskCollateral;
 
@@ -78,7 +77,6 @@ contract ECPCollateral is Ownable {
         balances[cp] += int(unlockAmount);
         checkCpInfo(cp);
         emit CollateralUnlocked(cp, unlockAmount);
-//        emit TaskStatusChanged(taskID, STATUS_UNLOCKED);
     }
 
     function slashCollateral(address cp, uint slashAmount) public onlyAdmin {
