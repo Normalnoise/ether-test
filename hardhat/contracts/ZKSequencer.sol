@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -16,6 +16,11 @@ contract ZKSequencer is Ownable {
     event AdminRemoved(address indexed admin);
     event OwnerChanged(address indexed previousOwner, address indexed newOwner);
     event BatchTransferredToEscrow(address indexed admin, address[] cpAccounts, uint256[] amounts);
+
+    constructor() Ownable(msg.sender)  {
+        transferOwnership(msg.sender);
+        admins[msg.sender] = true;
+    }
 
     modifier onlyAdminOrOwner() {
         require(admins[msg.sender] || owner() == msg.sender, "Not an admin or owner");
