@@ -246,22 +246,17 @@ contract ECPCollateral is Ownable {
 
     function checkCpInfo(address cpAccount) internal {
         if (balances[cpAccount] == 0 && frozenBalance[cpAccount] == 0) {
-            cpStatus[cpAccount] = "Inactive";
+            cpStatus[cpAccount] = "NSC";
         } else {
             cpStatus[cpAccount] = "Active";
         }
     }
 
-    function emergencyWithdraw(address cpAccount) external onlyOwner {
-        require(balances[cpAccount] > 0 || frozenBalance[cpAccount] > 0, "No funds to withdraw");
-
-        uint withdrawAmount = uint(balances[cpAccount]) + frozenBalance[cpAccount];
-        balances[cpAccount] = 0;
-        frozenBalance[cpAccount] = 0;
-        collateralToken.transfer(owner(), withdrawAmount);
-
-        checkCpInfo(cpAccount);
-        emit Withdraw(owner(), cpAccount, withdrawAmount);
+    function withdrawSlashedFunds(uint slashfund) public onlyOwner {
+        require(slashedFunds >= slashfund, "Withdraw slashfund amount exceeds slashedFunds");
+        slashedFunds -= slashfund;
+        collateralToken.transfer(msg.sender, slashfund);
+        emit WithdrawSlash(msg.sender, slashfund);
     }
 
 }
