@@ -18,6 +18,7 @@ contract ECPCollateral is Ownable {
     
 
     struct ContractInfo {
+        address collateralToken; 
         uint slashedFunds;
         uint baseCollateral;
         uint collateralRatio;
@@ -141,6 +142,7 @@ contract ECPCollateral is Ownable {
 
     function getECPCollateralInfo() external view returns (ContractInfo memory) {
         return ContractInfo({
+            collateralToken: address(collateralToken), 
             slashedFunds: slashedFunds,
             baseCollateral: baseCollateral,
             collateralRatio: collateralRatio,
