@@ -61,6 +61,11 @@ contract ZKSequencer is Ownable {
         emit TransferredToEscrow(cpAccount, amount);
     }
 
+   function getBalance(address cpAccount) external view returns (uint256) {
+       return balances[cpAccount];
+    }
+
+
     function batchTransferToEscrow(address[] calldata cpAccounts, uint256[] calldata amounts) external onlyAdminOrOwner {
         require(cpAccounts.length == amounts.length, "Arrays length mismatch");
         for (uint i = 0; i < cpAccounts.length; i++) {
