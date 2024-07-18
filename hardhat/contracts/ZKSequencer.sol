@@ -61,7 +61,7 @@ contract ZKSequencer is Ownable {
         emit TransferredToEscrow(cpAccount, amount);
     }
 
-   function getBalance(address cpAccount) external view returns (uint256) {
+   function getCPBalance(address cpAccount) external view returns (uint256) {
        return balances[cpAccount];
     }
 
