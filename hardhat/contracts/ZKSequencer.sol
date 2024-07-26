@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ZKSequencer is Ownable {
     mapping(address => bool) public admins;
-    mapping(address => uint256) public balances;
+    mapping(address => int) public balances;
     uint256 public escrowBalance;
 
     event Deposited(address indexed cpAccount, uint256 amount);
@@ -55,7 +55,6 @@ contract ZKSequencer is Ownable {
     }
 
     function transferToEscrow(address cpAccount, uint256 amount) external onlyAdminOrOwner {
-        require(balances[cpAccount] >= amount, "Insufficient balance");
         balances[cpAccount] -= amount;
         escrowBalance += amount;
         emit TransferredToEscrow(cpAccount, amount);
@@ -69,7 +68,6 @@ contract ZKSequencer is Ownable {
     function batchTransferToEscrow(address[] calldata cpAccounts, uint256[] calldata amounts) external onlyAdminOrOwner {
         require(cpAccounts.length == amounts.length, "Arrays length mismatch");
         for (uint i = 0; i < cpAccounts.length; i++) {
-            require(balances[cpAccounts[i]] >= amounts[i], "Insufficient balance");
             balances[cpAccounts[i]] -= amounts[i];
             escrowBalance += amounts[i];
             emit TransferredToEscrow(cpAccounts[i], amounts[i]);
