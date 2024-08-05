@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ZKSequencer is Ownable {
     mapping(address => bool) public admins;
-    mapping(address => uint256) public balances;
+    mapping(address => int) public balances;
     uint256 public escrowBalance;
 
     event Deposited(address indexed cpAccount, uint256 amount);
@@ -39,7 +39,7 @@ contract ZKSequencer is Ownable {
 
     function deposit(address cpAccount) public payable {
         require(cpAccount != address(0), "Invalid account address");
-        balances[cpAccount] += msg.value;
+        balances[cpAccount] += int(msg.value);
         emit Deposited(cpAccount, msg.value);
     }
 
@@ -47,25 +47,28 @@ contract ZKSequencer is Ownable {
         (bool success, bytes memory CPOwner) = cpAccount.call(abi.encodeWithSignature("getOwner()"));
         require(success, "Failed to call getOwner function of CPAccount");
         address cpOwner = abi.decode(CPOwner, (address));
-        require(balances[cpAccount] >= amount, "Withdraw amount exceeds balance");
+        require(balances[cpAccount] >= int(amount), "Withdraw amount exceeds balance");
         require(msg.sender == cpOwner, "Only CP's owner can withdraw the collateral funds");
-        balances[cpAccount] -= amount;
+        balances[cpAccount] -= int(amount);
         payable(msg.sender).transfer(amount);
         emit Withdrawn(cpAccount, amount);
     }
 
     function transferToEscrow(address cpAccount, uint256 amount) external onlyAdminOrOwner {
-        require(balances[cpAccount] >= amount, "Insufficient balance");
-        balances[cpAccount] -= amount;
+        balances[cpAccount] -= int(amount);
         escrowBalance += amount;
         emit TransferredToEscrow(cpAccount, amount);
     }
 
+   function getCPBalance(address cpAccount) external view returns (int) {
+       return balances[cpAccount];
+    }
+
+
     function batchTransferToEscrow(address[] calldata cpAccounts, uint256[] calldata amounts) external onlyAdminOrOwner {
         require(cpAccounts.length == amounts.length, "Arrays length mismatch");
         for (uint i = 0; i < cpAccounts.length; i++) {
-            require(balances[cpAccounts[i]] >= amounts[i], "Insufficient balance");
-            balances[cpAccounts[i]] -= amounts[i];
+            balances[cpAccounts[i]] -= int(amounts[i]);
             escrowBalance += amounts[i];
             emit TransferredToEscrow(cpAccounts[i], amounts[i]);
         }
