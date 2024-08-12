@@ -11,9 +11,28 @@ require('dotenv').config()
 module.exports = {
   solidity: {
     compilers: [
-      { version: '0.8.24' },
+      {
+        version: '0.8.24',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 2000,
+          },
+          viaIR: true,
+        },
+      },
       { version: '0.8.19' },
       { version: '0.8.20' },
+      {
+        version: '0.8.26',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 2000,
+          },
+          viaIR: true,
+        },
+      },
     ],
   },
   networks: {
@@ -24,6 +43,10 @@ module.exports = {
     proxima: {
       url: process.env.PROXIMA_RPC,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    mainnet: {
+      url: process.env.SWAN_MAINNET_RPC_URL,
+      accounts: [process.env.SWAN_MAINNET_PRIVATE_KEY],
     },
   },
 }
