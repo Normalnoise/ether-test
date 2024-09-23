@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -43,7 +43,7 @@ contract PaymentContract is Ownable {
     }
 
     // Constructor: initializes platform wallet, platform fee rate, ERC20 token address, and initial block height
-    constructor(address _tokenAddress, address _platformWallet, uint256 _platformFeeRate, uint256 _initialBlocksForWithdrawal) {
+    constructor(address _tokenAddress, address _platformWallet, uint256 _platformFeeRate, uint256 _initialBlocksForWithdrawal) Ownable(msg.sender){
         token = IERC20(_tokenAddress);
         platformWallet = _platformWallet;
         platformFeeRate = _platformFeeRate;
@@ -139,7 +139,7 @@ contract PaymentContract is Ownable {
     }
 
     // 12. Admin transfers part of a user's Escrow funds to a CP account's beneficiary address
-    function transferEscrowToCPBeneficiary(address account, address cpAccount, uint256 amount) external onlyAdmin {
+    function transferEscrowToCPBeneficiary(address account, address cpAccount, uint256 amount) internal onlyAdmin {
         int256 escrowBalance = accounts[account].escrow;  // Get the current escrow balance
 
         // If escrow is insufficient, only pay the escrow balance, allowing balance to go negative
