@@ -194,4 +194,9 @@ contract PaymentContract is Ownable {
         WalletAccount storage account = accounts[wallet];
         return (account.available, account.escrow);
     }
+    
+    // Function to get basic contract information
+    function getBasicInfo() external view returns (address tokenAddress, address platformAddress, uint256 feeRate, uint256 withdrawalBlocks) {
+        return (address(token), platformWallet, platformFeeRate, blocksForWithdrawal);
+    }
 }
