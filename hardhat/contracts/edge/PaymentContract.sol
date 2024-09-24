@@ -34,7 +34,7 @@ contract PaymentContract is Ownable {
     event TransferToPlatform(address account, address platformWallet, uint256 realPlatformFee, uint256 platformFee);
     event Deposited(address indexed account, uint256 amount);
     event Withdrawal(address indexed account, uint256 amount);  // New event for withdrawals
-    event transferToEscrow(address indexed account, uint256 amount);
+    event transferedToEscrow(address indexed account, uint256 amount);
 
 
 
@@ -101,16 +101,16 @@ contract PaymentContract is Ownable {
         emit Deposited(msg.sender, amount);
     }
 
-    // 8. transfer to Escrow account
+    // 9. transfer to Escrow account
     function transferToEscrow(uint256 amount) external {
-        require(amount > 0, "Insufficient fund to transfer");
+        require(accounts[msg.sender].available > amount, "Insufficient fund to transfer");
         accounts[msg.sender].available -= amount;
         accounts[msg.sender].escrow += int256(amount);
-        emit transferToEscrow(msg.sender, amount);
+        emit transferedToEscrow(msg.sender, amount);
     }
 
 
-    // 9. Withdraw from Available account to wallet
+    // 10. Withdraw from Available account to wallet
     function withdrawAvailableToWallet(uint256 amount) external {
         require(accounts[msg.sender].available >= amount, "Insufficient balance");
         accounts[msg.sender].available -= amount;
@@ -118,7 +118,7 @@ contract PaymentContract is Ownable {
         emit Withdrawal(msg.sender, amount);  // Emit the Withdrawal event after a successful transfer
     }
 
-    // 10. Request withdrawal from Escrow account to Available account (only records the withdrawal amount and request block height)
+    // 11. Request withdrawal from Escrow account to Available account (only records the withdrawal amount and request block height)
     function requestWithdrawEscrowToAvailable(uint256 amount) external {
         require(accounts[msg.sender].escrow >= int256(amount), "Insufficient Escrow balance");
         require(amount > 0, "Withdrawal amount must be greater than zero");
@@ -130,7 +130,7 @@ contract PaymentContract is Ownable {
         emit RequestEscrowToAvailable(msg.sender, block.number, amount);
     }
 
-    // 11. Confirm Escrow withdrawal to Available account (based on block height confirmation, actual fund transfer)
+    // 12. Confirm Escrow withdrawal to Available account (based on block height confirmation, actual fund transfer)
     function confirmWithdrawEscrowToAvailable() external {
         require(accounts[msg.sender].withdrawRequestBlock > 0, "No withdrawal request");
         require(block.number >= accounts[msg.sender].withdrawRequestBlock + blocksForWithdrawal, "Withdrawal not yet available based on block height");
@@ -148,7 +148,7 @@ contract PaymentContract is Ownable {
         emit ConfirmEscrowToAvailable(msg.sender, amount);
     }
 
-    // 12. Admin transfers part of a user's Escrow funds to a CP account's beneficiary address
+    // 13. Admin transfers part of a user's Escrow funds to a CP account's beneficiary address
     function transferEscrowToCPBeneficiary(address account, address cpAccount, uint256 amount) internal onlyAdmin {
         int256 escrowBalance = accounts[account].escrow;  // Get the current escrow balance
 
@@ -171,7 +171,7 @@ contract PaymentContract is Ownable {
         emit TransferToCPBeneficiary(account, cpAccount, beneficiary, transferAmount);
     }
 
-    // 13. Batch transfer amounts from users to CP's beneficiary address, deducting platform fee
+    // 14. Batch transfer amounts from users to CP's beneficiary address, deducting platform fee
     function batchPaymentToCP(
         address[] memory users,
         address[] memory cps,
