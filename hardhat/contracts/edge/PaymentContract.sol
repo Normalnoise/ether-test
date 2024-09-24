@@ -34,6 +34,7 @@ contract PaymentContract is Ownable {
     event TransferToPlatform(address account, address platformWallet, uint256 realPlatformFee, uint256 platformFee);
     event Deposited(address indexed account, uint256 amount);
     event Withdrawal(address indexed account, uint256 amount);  // New event for withdrawals
+    event transferToEscrow(address indexed account, uint256 amount);
 
 
 
@@ -99,6 +100,15 @@ contract PaymentContract is Ownable {
         accounts[msg.sender].available += amount;
         emit Deposited(msg.sender, amount);
     }
+
+    // 8. transfer to Escrow account
+    function transferToEscrow(uint256 amount) external {
+        require(amount > 0, "Insufficient fund to transfer");
+        accounts[msg.sender].available -= amount;
+        accounts[msg.sender].escrow += int256(amount);
+        emit transferToEscrow(msg.sender, amount);
+    }
+
 
     // 9. Withdraw from Available account to wallet
     function withdrawAvailableToWallet(uint256 amount) external {
@@ -194,7 +204,7 @@ contract PaymentContract is Ownable {
         WalletAccount storage account = accounts[wallet];
         return (account.available, account.escrow);
     }
-    
+
     // Function to get basic contract information
     function getBasicInfo() external view returns (address tokenAddress, address platformAddress, uint256 feeRate, uint256 withdrawalBlocks) {
         return (address(token), platformWallet, platformFeeRate, blocksForWithdrawal);
