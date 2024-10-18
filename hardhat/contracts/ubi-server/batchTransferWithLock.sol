@@ -16,14 +16,14 @@ contract BatchTransferWithLock {
 
     uint256 public lockPercentage; // Global lock percentage
 
-    event TransferPerformed(address indexed from, address indexed to, uint256 amount);
+    event TransferPerformed(address indexed from, address indexed cpAccount, address cpBeneficiary, uint256 amount);
     event AdminAdded(address indexed admin);
     event AdminRemoved(address indexed admin);
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
     event TokenAddressUpdated(address indexed oldTokenAddress, address indexed newTokenAddress);
     event LockPercentageUpdated(uint256 oldLockPercentage, uint256 newLockPercentage);
-    event FundsLocked(address indexed recipient, uint256 amount);
-    event FundsClaimed(address indexed recipient, uint256 amount);
+    event FundsLocked(address indexed recipient, uint256 amount, uint256 totalLockAmount);
+    emit FundsReleased(address indexed cpAccount, address cpBeneficiary, uint256 lockedAmount)
     event AllLockedFundsReleased(address indexed contractAddress, uint256 totalAmount);
 
     modifier onlyOwner() {
@@ -74,48 +74,38 @@ contract BatchTransferWithLock {
         lockPercentage = newLockPercentage;
     }
 
-    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) external onlyAdmin {
-        require(recipients.length == amounts.length, "Mismatched arrays");
+    function batchTransfer(address[] calldata cps, uint256[] calldata amounts) external onlyAdmin {
+        require(cps.length == amounts.length, "Mismatched arrays");
         IERC20 token = IERC20(tokenAddress);
 
-        for (uint256 i = 0; i < recipients.length; i++) {
-            require(token.transfer(recipients[i], amounts[i]), "Transfer failed");
-            emit TransferPerformed(msg.sender, recipients[i], amounts[i]);
+        for (uint256 i = 0; i < cps.length; i++) {
+            address cpBeneficiary = _getBeneficiary(cps[i]);
+            require(token.transfer(cpBeneficiary, amounts[i]), "Transfer failed");
+            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, amounts[i]);
         }
     }
 
-    function batchTransferWithLock(address[] calldata recipients, uint256[] calldata amounts) external onlyAdmin {
-        require(recipients.length == amounts.length, "Mismatched arrays");
+    function batchTransferWithLock(address[] calldata cps, uint256[] calldata amounts) external onlyAdmin {
+        require(cps.length == amounts.length, "Mismatched arrays");
         IERC20 token = IERC20(tokenAddress);
 
-        for (uint256 i = 0; i < recipients.length; i++) {
+        for (uint256 i = 0; i < cps.length; i++) {
             uint256 lockAmount = (amounts[i] * lockPercentage) / 100;
             uint256 transferAmount = amounts[i] - lockAmount;
 
+            address cpBeneficiary = _getBeneficiary(cps[i]);
+
             // Send the directly available portion
-            require(token.transfer(recipients[i], transferAmount), "Direct transfer failed");
-            emit TransferPerformed(msg.sender, recipients[i], transferAmount);
+            require(token.transfer(cpBeneficiary, transferAmount), "Direct transfer failed");
+            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, transferAmount);
 
             // Lock the specified portion
-            if (lockedFunds[recipients[i]] == 0) {
-                lockedRecipients.push(recipients[i]);
+            if (lockedFunds[cps[i]] == 0) {
+                lockedRecipients.push(cps[i]);
             }
-            lockedFunds[recipients[i]] += lockAmount;
-            emit FundsLocked(recipients[i], lockAmount);
+            lockedFunds[cps[i]] += lockAmount;
+            emit FundsLocked(cps[i], lockAmount, lockedFunds[cps[i]]);
         }
-    }
-
-    function claimLockedFunds() external {
-        uint256 amount = lockedFunds[msg.sender];
-        require(amount > 0, "No locked funds available");
-
-        lockedFunds[msg.sender] = 0;
-        IERC20 token = IERC20(tokenAddress);
-        require(token.transfer(msg.sender, amount), "Claim transfer failed");
-        emit FundsClaimed(msg.sender, amount);
-
-        // Remove the recipient from the locked list
-        _removeLockedRecipient(msg.sender);
     }
 
     function releaseAllLockedFunds() external onlyOwner {
@@ -123,28 +113,28 @@ contract BatchTransferWithLock {
         uint256 totalAmount;
 
         for (uint256 i = 0; i < lockedRecipients.length; i++) {
-            address user = lockedRecipients[i];
-            uint256 lockedAmount = lockedFunds[user];
+            address cp = lockedRecipients[i];
+            uint256 lockedAmount = lockedFunds[cp];
 
             if (lockedAmount > 0) {
-                lockedFunds[user] = 0;
-                require(token.transfer(user, lockedAmount), "Release transfer failed");
-                emit FundsClaimed(user, lockedAmount);
+                address cpBeneficiary = _getBeneficiary(cp);
+                lockedFunds[cp] = 0;
+                require(token.transfer(cpBeneficiary, lockedAmount), "Release transfer failed");
+                emit FundsReleased(cp, cpBeneficiary, lockedAmount);
                 totalAmount += lockedAmount;
+
+                // Remove locked recipient after releasing funds
+                _removeLockedRecipient(cp);
             }
         }
-
-        // Clear the list of locked recipients
-        delete lockedRecipients;
 
         emit AllLockedFundsReleased(address(this), totalAmount);
     }
 
-    function getLockedFunds(address account) external view returns (uint256) {
-        return lockedFunds[account];
+    function getLockedFunds(address cp) external view returns (uint256) {
+        return lockedFunds[cp];
     }
 
-    // New function to get all locked recipients and their funds
     function getAllLockedFunds() external view returns (address[] memory, uint256[] memory) {
         uint256 length = lockedRecipients.length;
         address[] memory recipients = new address[](length);
@@ -156,6 +146,13 @@ contract BatchTransferWithLock {
         }
 
         return (recipients, amounts);
+    }
+
+    // Internal function to get beneficiary address from cpAccount
+    function _getBeneficiary(address cpAccount) internal view returns (address) {
+        (bool success, bytes memory CPBeneficiary) = cpAccount.call(abi.encodeWithSignature("getBeneficiary()"));
+        require(success, "Failed to call getBeneficiary function of CPAccount");
+        return abi.decode(CPBeneficiary, (address));
     }
 
     // Internal function to remove a specific locked recipient
@@ -170,4 +167,3 @@ contract BatchTransferWithLock {
         }
     }
 }
-
