@@ -25,6 +25,8 @@ contract BatchTransferWithLock {
     event FundsLocked(address indexed recipient, uint256 amount, uint256 totalLockAmount);
     event FundsReleased(address indexed cpAccount, address cpBeneficiary, uint256 lockedAmount);
     event AllLockedFundsReleased(address indexed contractAddress, uint256 totalAmount);
+    event TokensWithdrawn(address indexed tokenAddress, uint256 amount, address indexed to);
+    event ETHWithdrawn(uint256 amount, address indexed to);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can perform this action");
@@ -112,8 +114,8 @@ contract BatchTransferWithLock {
         IERC20 token = IERC20(tokenAddress);
         uint256 totalAmount;
 
-        for (uint256 i = 0; i < lockedRecipients.length; i++) {
-            address cp = lockedRecipients[i];
+        for (uint256 i = lockedRecipients.length; i > 0; i--) {
+            address cp = lockedRecipients[i - 1];
             uint256 lockedAmount = lockedFunds[cp];
 
             if (lockedAmount > 0) {
@@ -148,6 +150,20 @@ contract BatchTransferWithLock {
         return (recipients, amounts);
     }
 
+    // Allows the owner to withdraw ERC20 tokens from the contract
+    function withdrawTokens(uint256 amount) external onlyOwner {
+        IERC20 token = IERC20(tokenAddress);
+        require(token.transfer(owner, amount), "Token withdrawal failed");
+        emit TokensWithdrawn(tokenAddress, amount, owner);
+    }
+
+    // Allows the owner to withdraw ETH from the contract
+    function withdrawETH(uint256 amount) external onlyOwner {
+        require(address(this).balance >= amount, "Insufficient ETH balance");
+        payable(owner).transfer(amount);
+        emit ETHWithdrawn(amount, owner);
+    }
+
     // Internal function to get beneficiary address from cpAccount
     function _getBeneficiary(address cpAccount) internal returns (address) {
         (bool success, bytes memory CPBeneficiary) = cpAccount.call(abi.encodeWithSignature("getBeneficiary()"));
@@ -166,4 +182,7 @@ contract BatchTransferWithLock {
             }
         }
     }
+
+    // Fallback function to receive ETH
+    receive() external payable {}
 }
