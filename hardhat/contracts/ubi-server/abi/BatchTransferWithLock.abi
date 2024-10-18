@@ -74,9 +74,15 @@
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "totalLockAmount",
+				"type": "uint256"
 			}
 		],
-		"name": "FundsClaimed",
+		"name": "FundsLocked",
 		"type": "event"
 	},
 	{
@@ -85,17 +91,23 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "recipient",
+				"name": "cpAccount",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "cpBeneficiary",
 				"type": "address"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "amount",
+				"name": "lockedAmount",
 				"type": "uint256"
 			}
 		],
-		"name": "FundsLocked",
+		"name": "FundsReleased",
 		"type": "event"
 	},
 	{
@@ -167,7 +179,13 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "to",
+				"name": "cpAccount",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "cpBeneficiary",
 				"type": "address"
 			},
 			{
@@ -216,7 +234,7 @@
 		"inputs": [
 			{
 				"internalType": "address[]",
-				"name": "recipients",
+				"name": "cps",
 				"type": "address[]"
 			},
 			{
@@ -234,7 +252,7 @@
 		"inputs": [
 			{
 				"internalType": "address[]",
-				"name": "recipients",
+				"name": "cps",
 				"type": "address[]"
 			},
 			{
@@ -263,13 +281,6 @@
 	},
 	{
 		"inputs": [],
-		"name": "claimLockedFunds",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
 		"name": "getAllLockedFunds",
 		"outputs": [
 			{
@@ -290,7 +301,7 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "account",
+				"name": "cp",
 				"type": "address"
 			}
 		],
