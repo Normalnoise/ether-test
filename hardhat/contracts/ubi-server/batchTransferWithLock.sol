@@ -23,7 +23,7 @@ contract BatchTransferWithLock {
     event TokenAddressUpdated(address indexed oldTokenAddress, address indexed newTokenAddress);
     event LockPercentageUpdated(uint256 oldLockPercentage, uint256 newLockPercentage);
     event FundsLocked(address indexed recipient, uint256 amount, uint256 totalLockAmount);
-    emit FundsReleased(address indexed cpAccount, address cpBeneficiary, uint256 lockedAmount)
+    event FundsReleased(address indexed cpAccount, address cpBeneficiary, uint256 lockedAmount);
     event AllLockedFundsReleased(address indexed contractAddress, uint256 totalAmount);
 
     modifier onlyOwner() {
@@ -149,7 +149,7 @@ contract BatchTransferWithLock {
     }
 
     // Internal function to get beneficiary address from cpAccount
-    function _getBeneficiary(address cpAccount) internal view returns (address) {
+    function _getBeneficiary(address cpAccount) internal returns (address) {
         (bool success, bytes memory CPBeneficiary) = cpAccount.call(abi.encodeWithSignature("getBeneficiary()"));
         require(success, "Failed to call getBeneficiary function of CPAccount");
         return abi.decode(CPBeneficiary, (address));
