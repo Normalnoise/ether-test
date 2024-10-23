@@ -22,7 +22,7 @@ contract BatchTransferWithLock {
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
     event TokenAddressUpdated(address indexed oldTokenAddress, address indexed newTokenAddress);
     event LockPercentageUpdated(uint256 oldLockPercentage, uint256 newLockPercentage);
-    event FundsLocked(address indexed recipient, uint256 amount, uint256 totalLockAmount);
+    event FundsLocked(address indexed recipient, uint256 amount, uint256 totalLockAmount, string cpType);
     event FundsReleased(address indexed cpAccount, address cpBeneficiary, uint256 lockedAmount);
     event AllLockedFundsReleased(address indexed contractAddress, uint256 totalAmount);
     event TokensWithdrawn(address indexed tokenAddress, uint256 amount, address indexed to);
@@ -87,7 +87,7 @@ contract BatchTransferWithLock {
         }
     }
 
-    function batchTransferWithLock(address[] calldata cps, uint256[] calldata amounts) external onlyAdmin {
+    function batchTransferWithLock(address[] calldata cps, uint256[] calldata amounts, string memory cpType) external onlyAdmin {
         require(cps.length == amounts.length, "Mismatched arrays");
         IERC20 token = IERC20(tokenAddress);
 
@@ -99,14 +99,14 @@ contract BatchTransferWithLock {
 
             // Send the directly available portion
             require(token.transfer(cpBeneficiary, transferAmount), "Direct transfer failed");
-            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, transferAmount);
+            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, transferAmount, cpType);
 
             // Lock the specified portion
             if (lockedFunds[cps[i]] == 0) {
                 lockedRecipients.push(cps[i]);
             }
             lockedFunds[cps[i]] += lockAmount;
-            emit FundsLocked(cps[i], lockAmount, lockedFunds[cps[i]]);
+            emit FundsLocked(cps[i], lockAmount, lockedFunds[cps[i]], cpType);
         }
     }
 
