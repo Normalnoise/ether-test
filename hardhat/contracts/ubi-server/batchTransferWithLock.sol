@@ -16,7 +16,7 @@ contract BatchTransferWithLock {
 
     uint256 public lockPercentage; // Global lock percentage
 
-    event TransferPerformed(address indexed from, address indexed cpAccount, address cpBeneficiary, uint256 amount);
+    event TransferPerformed(address indexed from, address indexed cpAccount, address cpBeneficiary, uint256 amount, string cpType);
     event AdminAdded(address indexed admin);
     event AdminRemoved(address indexed admin);
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
@@ -76,14 +76,14 @@ contract BatchTransferWithLock {
         lockPercentage = newLockPercentage;
     }
 
-    function batchTransfer(address[] calldata cps, uint256[] calldata amounts) external onlyAdmin {
+    function batchTransfer(address[] calldata cps, uint256[] calldata amounts, string memory cpType) external onlyAdmin {
         require(cps.length == amounts.length, "Mismatched arrays");
         IERC20 token = IERC20(tokenAddress);
 
         for (uint256 i = 0; i < cps.length; i++) {
             address cpBeneficiary = _getBeneficiary(cps[i]);
             require(token.transfer(cpBeneficiary, amounts[i]), "Transfer failed");
-            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, amounts[i]);
+            emit TransferPerformed(msg.sender, cps[i], cpBeneficiary, amounts[i], cpType);
         }
     }
 
