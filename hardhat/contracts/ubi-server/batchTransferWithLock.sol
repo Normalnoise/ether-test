@@ -27,7 +27,8 @@ contract BatchTransferWithLock {
     event AllLockedFundsReleased(address indexed contractAddress, uint256 totalAmount);
     event TokensWithdrawn(address indexed tokenAddress, uint256 amount, address indexed to);
     event ETHWithdrawn(uint256 amount, address indexed to);
-    event BatchBurnedFunds(address indexed from, address[] recipients, uint256[] amounts, address burnAddress);
+    event BatchBurnedFunds(address indexed from, address[] recipients, uint256[] amounts, address burnAddress, string cpType);
+    event BurnedUBIfunds(address indexed from, address cp, uint256 amount, address burnAddress, string cpType);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can perform this action");
@@ -88,15 +89,16 @@ contract BatchTransferWithLock {
         }
     }
 
-    function batchBurnFuds(address[] calldata recipients, uint256[] calldata amounts, address burnAddress) external onlyAdmin {
+    function batchBurnFunds(address[] calldata recipients, uint256[] calldata amounts, address burnAddress, string memory cpType ) external onlyAdmin {
         require(recipients.length == amounts.length, "Mismatched arrays");
         IERC20 token = IERC20(tokenAddress);
     
         for (uint256 i = 0; i < recipients.length; i++) {
             require(token.transfer(burnAddress, amounts[i]), "Transfer failed");
+            emit BurnedUBIfunds(msg.sender, recipients[i], amounts[i], burnAddress, cpType);
         }
     
-        emit BatchBurnedFunds(msg.sender, recipients, amounts, burnAddress);
+        emit BatchBurnedFunds(msg.sender, recipients, amounts, burnAddress, cpType);
     }
 
 
