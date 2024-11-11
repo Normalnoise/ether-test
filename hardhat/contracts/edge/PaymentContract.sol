@@ -30,10 +30,10 @@ contract PaymentContract is Ownable {
     event PlatformFeeRateSet(uint256 feeRate);
     event PlatformWalletSet(address indexed platformWallet);
     event TokenAddressSet(address indexed token);
-    event TransferToCPBeneficiary(string indexed taskUUID, address account, address cpAccount, address beneficiary, uint256 transferAmount);
+    event TransferToCPBeneficiary(string taskUUID, address account, address indexed cpAccount, address beneficiary, uint256 transferAmount);
     event TransferToPlatform(address account, address platformWallet, uint256 realPlatformFee, uint256 platformFee);
     event Deposited(address indexed account, uint256 amount);
-    event Withdrawal(address indexed account, uint256 amount);  // New event for withdrawals
+    event Withdrawal(address indexed account, uint256 amount);  //New event for withdrawals
     event transferedToEscrow(address indexed account, uint256 amount);
 
 
