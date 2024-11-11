@@ -30,7 +30,7 @@ contract PaymentContract is Ownable {
     event PlatformFeeRateSet(uint256 feeRate);
     event PlatformWalletSet(address indexed platformWallet);
     event TokenAddressSet(address indexed token);
-    event TransferToCPBeneficiary(address account, address cpAccount, address beneficiary, uint256 transferAmount);
+    event TransferToCPBeneficiary(string indexed taskUUID, address account, address cpAccount, address beneficiary, uint256 transferAmount);
     event TransferToPlatform(address account, address platformWallet, uint256 realPlatformFee, uint256 platformFee);
     event Deposited(address indexed account, uint256 amount);
     event Withdrawal(address indexed account, uint256 amount);  // New event for withdrawals
@@ -149,7 +149,7 @@ contract PaymentContract is Ownable {
     }
 
     // 13. Admin transfers part of a user's Escrow funds to a CP account's beneficiary address
-    function transferEscrowToCPBeneficiary(address account, address cpAccount, uint256 amount) internal onlyAdmin {
+    function transferEscrowToCPBeneficiary(string memory taskUUID, address account, address cpAccount, uint256 amount) internal onlyAdmin {
         int256 escrowBalance = accounts[account].escrow;  // Get the current escrow balance
 
         // If escrow is insufficient, only pay the escrow balance, allowing balance to go negative
@@ -168,16 +168,18 @@ contract PaymentContract is Ownable {
         // Perform transfer to beneficiary, pay the actual calculated transferAmount
         require(token.transfer(beneficiary, transferAmount), "Transfer to beneficiary failed");
 
-        emit TransferToCPBeneficiary(account, cpAccount, beneficiary, transferAmount);
+        emit TransferToCPBeneficiary(taskUUID, account, cpAccount, beneficiary, transferAmount);
     }
 
     // 14. Batch transfer amounts from users to CP's beneficiary address, deducting platform fee
     function batchPaymentToCP(
         address[] memory users,
         address[] memory cps,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        string[] memory taskUUIDs
     ) external onlyAdmin {
-        require(users.length == cps.length && users.length == amounts.length, "Mismatched input arrays");
+        require(users.length == cps.length && users.length == amounts.length, "Mismatched input arrays among u, c and a");
+        require(taskUUIDs.length == users.length && taskUUIDs.length == cps.length, "Mismatched input arrays among t, u and c");
 
         for (uint256 i = 0; i < users.length; i++) {
             // Calculate the platform fee
@@ -193,7 +195,7 @@ contract PaymentContract is Ownable {
 
             // Call transferEscrowToCPBeneficiary function to transfer remaining funds to CP's beneficiary
             uint256 remainingAmount = amounts[i] - realPlatformFee;
-            transferEscrowToCPBeneficiary(users[i], cps[i], remainingAmount);
+            transferEscrowToCPBeneficiary(taskUUIDs[i], users[i], cps[i], remainingAmount);
 
             emit TransferToPlatform(users[i], platformWallet, realPlatformFee, platformFee);
         }
