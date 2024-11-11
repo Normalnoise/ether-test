@@ -212,12 +212,18 @@
 		"inputs": [
 			{
 				"indexed": false,
+				"internalType": "string",
+				"name": "taskUUID",
+				"type": "string"
+			},
+			{
+				"indexed": false,
 				"internalType": "address",
 				"name": "account",
 				"type": "address"
 			},
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
 				"name": "cpAccount",
 				"type": "address"
@@ -389,6 +395,11 @@
 				"internalType": "uint256[]",
 				"name": "amounts",
 				"type": "uint256[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "taskUUIDs",
+				"type": "string[]"
 			}
 		],
 		"name": "batchPaymentToCP",
