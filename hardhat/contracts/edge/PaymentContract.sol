@@ -103,7 +103,7 @@ contract PaymentContract is Ownable {
 
     // 9. transfer to Escrow account
     function transferToEscrow(uint256 amount) external {
-        require(accounts[msg.sender].available > amount, "Insufficient fund to transfer");
+        require(accounts[msg.sender].available >= amount, "Insufficient fund to transfer");
         accounts[msg.sender].available -= amount;
         accounts[msg.sender].escrow += int256(amount);
         emit transferedToEscrow(msg.sender, amount);
